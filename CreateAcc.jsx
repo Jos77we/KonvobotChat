@@ -11,6 +11,7 @@ let accountData1 = null;
 let mnemo = null;
 let usname = null;
 let secretKey;
+let accToken = null;
 let dataAvailable = false;
 
 const sessionMiddleware = (req, res, next) => {
@@ -56,6 +57,29 @@ router.post('/data', (req, res) => {
     res.status(404).json({ error: "User is unknown" });
   }
 });
+
+router.post('/create', (req, res) => {
+  const {form} = req.body;
+  console.log(form)
+  
+  if(!form){
+     console.log("An error occured as no data is passed")
+  } else{
+    try {
+      const response = axios.post(
+        'https://api.kipaji.app/api/v1/auth/register', form,  {
+               headers: {
+                Authorization: `Bearer ${accToken}`,
+                 "Content-Type": "application/json",
+              }
+            }
+      );
+      console.log(response.data);
+    } catch (error) {
+      console.error("There was an error!", error);
+    }
+  }
+})
 
 async function chainRequest(name) {
   try {
@@ -106,6 +130,7 @@ async function chainRequest(name) {
 
         if (data3.code === 200) {
           const genToken = resToken;
+          accToken = genToken;
           const reqgenMemonic = {
             language: "ENGLISH",
             strength: 256,
@@ -133,7 +158,7 @@ async function chainRequest(name) {
               index: 0,
               language: "ENGLISH",
               memo_type: "id",
-              memo: "0042",
+              memo: "0049",
               home_domain: "benkiko.io",
             };
 

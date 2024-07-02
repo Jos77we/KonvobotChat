@@ -1,6 +1,10 @@
-const express = require('express')
+const express = require("express");
+const bodyParser = require("body-parser");
+
 
 const router = express.Router();
+router.use(bodyParser.urlencoded({ extended: false }));
+router.use(bodyParser.json());
 
 
 router.post('/login-user', (req, res) => {
@@ -10,6 +14,8 @@ router.post('/login-user', (req, res) => {
         if(!username && !publickey && !secretkey && !token){
             res.json("Error in obtaining details")
         } else{
+            const details = {username, publickey, secretkey, token}
+            console.log(details)
             res.json("Success")
         } 
     } catch (error) {
