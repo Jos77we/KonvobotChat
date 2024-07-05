@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const userInfo = require('./UserIntro.jsx');
 const { router: create } = require('./CreateAcc.jsx');
-const login = require('./FetchUser.jsx')
+const {router: login} = require('./FetchUser.jsx')
 const cors = require('cors');
 
 

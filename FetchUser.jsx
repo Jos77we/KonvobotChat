@@ -1,22 +1,40 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const axios = require("axios")
 
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
+let code = null;
 
-router.post('/login-user', (req, res) => {
-    const {username, publickey, secretkey, token} = req.body
+const loginSuccess = () => {
+    return code
+}
+router.post('/login-user', async (req, res) => {
+    const {paymail, password} = req.body
 
     try {
-        if(!username && !publickey && !secretkey && !token){
-            res.json("Error in obtaining details")
+        if(!paymail && !password){
+            res.json({code:"2000", Message:"Error in obtaining details"})
         } else{
-            const details = {username, publickey, secretkey, token}
-            console.log(details)
-            res.json("Success")
+            const logUser = await axios.post("https://api.kipaji.app/api/v1/auth/login", {paymail, password}, {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              })
+
+              if(logUser.data === "Invalid paymail or password"){
+                  const status = 204;
+                  status = code;
+              } else if(logUser.data.token){
+                const status1 = 200;
+                status1 = code;
+              } else {
+                const status2 = 404;
+                status2 = code;
+              }
         } 
     } catch (error) {
         console.log(error)
@@ -24,4 +42,4 @@ router.post('/login-user', (req, res) => {
    
 })
 
-module.exports = router;
+module.exports = {loginSuccess, router};
