@@ -10,7 +10,7 @@ router.use(bodyParser.json());
 let accountData1 = null;
 let mnemo = null;
 let usname = null;
-let secretKey;
+let secretKey = "e+eiv_e5q@y-bg#b@%^zvc2@j3+&6#_ulj+w&h1y*0_+&m#8nq"
 let accToken = null;
 let dataAvailable = false;
 
@@ -45,10 +45,7 @@ router.use((req, res, next) => {
   next();
 });
 
-const successReg = () => {
-  const success1 = "Success"
-  return success1;
- }
+
 
 router.post("/data", (req, res) => {
   const { userName } = req.body;
@@ -62,38 +59,6 @@ router.post("/data", (req, res) => {
   } else {
     res.status(404).json({ error: "User is unknown" });
   }
-});
-
-router.post("/create", (req, res) => {
-  const { form } = req.body;
-  console.log(form);
-
-  if (!form) {
-    console.log("An error occured as no data is passed");
-  } else {
-    try {
-      const response = axios.post(
-        "https://api.kipaji.app/api/v1/auth/register",
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${accToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if(!response.data){
-        console.log({code:"2001", Message:"Error registering user"})
-      } else{
-         successReg();
-      }
-      // console.log(response.data);
-    } catch (error) {
-      console.error("There was an error!", error);
-    }
-    // console.log("Form passed successfully")
-  }
-
 });
 
 
@@ -172,7 +137,7 @@ async function chainRequest(name) {
               index: 0,
               language: "ENGLISH",
               memo_type: "id",
-              memo: "0051",
+              memo: "00118",
               home_domain: "benkiko.io",
             };
 
@@ -186,8 +151,8 @@ async function chainRequest(name) {
             });
             // console.log(newAccount.data.message)
             const status = newAccount.data.code;
-            const resp = newAccount.data;
-            secretKey = resp.data["secret key"];
+            // const resp = newAccount.data;
+            // secretKey = resp.data["secret key"];
 
             if (newAccount.data.code === 201) {
               accountData1 = newAccount.data;
@@ -208,8 +173,8 @@ async function chainRequest(name) {
       console.log("An error occured");
     }
   } catch (error) {
-    console.log(error);
+    console.log("404 ERROR OCCURING");
   }
 }
 
-module.exports = { chainRequest, successReg, router };
+module.exports = { chainRequest, router };

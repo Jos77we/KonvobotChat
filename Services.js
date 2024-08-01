@@ -1,8 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const userInfo = require('./UserIntro.jsx');
-const { router: create } = require('./CreateAcc.jsx');
-const {router: login} = require('./FetchUser.jsx')
+const userInfo = require('./test.js');
+const { router: create } = require('./CreateAcc.js');
 const cors = require('cors');
 
 
@@ -13,7 +12,6 @@ app.use(cors());
 
 app.use('/whatsapp', userInfo);
 app.use('/', create)
-app.use('/', login)
 
 
 const PORT = 3000;
