@@ -32,9 +32,12 @@ function initMessage() {
     });
 }
 
+
 let userState = {};
+//Store the token in-store storage
 const tokenStore = {};
-const loginStatus = {}; // Track login status by user number
+// Track login status by user number
+const loginStatus = {}; 
 
 const successRes = async (form) => {
   try {
@@ -43,7 +46,7 @@ const successRes = async (form) => {
       form
     );
     if (response.data && response.data.token) {
-      console.log("Received token:", response.data.token);
+      // console.log("Received token:", response.data.token);
       return response.data.token;
     } else {
       console.log({ code: "2001", Message: "Error registering user" });
@@ -66,19 +69,19 @@ async function loginSuccess(paymail, password) {
     console.log(response.data);
 
     if (response.data) {
-      return { status: 200, data: response.data }; // Success
+      return { status: 200, data: response.data }; 
     } else {
-      return { status: 404, data: { code: "404", Message: "Not Found" } }; // Not Found or Error
+      return { status: 404, data: { code: "404", Message: "Not Found" } }; 
     }
   } catch (error) {
     console.error('Error making Axios request:', error);
-    return { status: 500, data: { code: "5000", Message: "Internal Server Error" } }; // Internal Server Error
+    return { status: 500, data: { code: "5000", Message: "Internal Server Error" } }; 
   }
 }
 
 router.post("/create", async (req, res) => {
   const { form } = req.body;
-  console.log("Received form:", form);
+  // console.log("Received form:", form);
 
   if (!form) {
     console.log("An error occurred as no data is passed");
@@ -90,8 +93,7 @@ router.post("/create", async (req, res) => {
         const key = Date.now();
         tokenStore[key] = token;
 
-        // Log the stored token and key
-        console.log(`Stored token: ${token} with key: ${key}`);
+        // console.log(`Stored token: ${token} with key: ${key}`);
 
         res.status(200).send({ key });
       } else {
@@ -107,17 +109,17 @@ router.post("/create", async (req, res) => {
 router.post('/login-user', async (req, res) => {
   const { paymail, password } = req.body;
 
-  console.log({ paymail, password });
+  // console.log({ paymail, password });
 
   if (!paymail || !password) {
     return res.status(400).json({ code: "2000", Message: "Error in obtaining details" });
   }
 
   const result = await loginSuccess(paymail, password);
-  loginStatus[req.body.From] = result; // Track the login status by user number
+  loginStatus[req.body.From] = result; 
 
-  console.log('loginSuccess result:', result);
-  console.log('current status', result.status);
+  // console.log('loginSuccess result:', result);
+  // console.log('current status', result.status);
 
   return res.status(result.status).json(result.data);
 });
@@ -140,35 +142,31 @@ router.post("/", async (req, res) => {
     } else if (incomingMessage === "log in") {
       twiml.message(`Please provide your paymail and password through the link ${userLink}`);
 
-      // Start checking for the status
+      
       const checkStatusInterval = setInterval( async () => {
-        console.log(`Checking loginStatus for ${fromNumber}:`, loginStatus);
-        // const status = loginStatus[fromNumber]?.status;
 
+        // console.log(`Checking loginStatus for ${fromNumber}:`, loginStatus);
+        
         const status = loginStatus["undefined"]?.status
-        console.log("The obtained status", status)
+        // console.log("The obtained status", status)
 
         const userName = loginStatus["undefined"]?.data.username
-        console.log("The user is called:", userName)
+        // console.log("The user is called:", userName)
 
         if (status === 200) {
           clearInterval(checkStatusInterval);
           await client.messages.create({
-            body: `Hello ${userName}, Welcome back`,
-            from: "whatsapp:+14155238886", // Twilio Sandbox number
+            body: `Hello ${userName},\n\nWelcome back. How would you like to proceed?\n1. Initiate a transaction\n2. Deposit\n3. Withdraw`,
+            from: "whatsapp:+14155238886", 
             to: fromNumber,
           });
-          // twiml.message(`Hello ${user.username}, Welcome back`);
-          // twiml.message(
-          //   "How would you want to proceed? 1. Initiate a transaction, 2. View transaction history, 3. Swap Currencies"
-          // );
 
           user.step = 4;
         } else if (status === 404 || status === 500) {
           clearInterval(checkStatusInterval);
           await client.messages.create({
             body: "Invalid paymail or password, Please try again",
-            from: "whatsapp:+14155238886", // Twilio Sandbox number
+            from: "whatsapp:+14155238886", 
             to: fromNumber,
           });
           user.step = 0;
@@ -192,36 +190,33 @@ router.post("/", async (req, res) => {
     user.name = incomingMessage;
     twiml.message(`Hello ${user.name}`);
     const response = await chainRequest(user.name);
-    console.log("chainRequest response:", response);
+    // console.log("chainRequest response:", response);
 
     if (response === 201) {
-      user.key = Date.now(); // Store the key for this user
+      user.key = Date.now(); 
       twiml.message(`Click this link to continue: ${sendLink}, You have 5 minutes`);
-
-      // Log the current tokenStore contents for debugging
-      console.log("Current tokenStore contents before timeout:", tokenStore);
+      
+      // console.log("Current tokenStore contents before timeout:", tokenStore);
 
       // Start the 5-minute countdown after token is stored
       setTimeout(async () => {
         try {
-          console.log("Current tokenStore contents after timeout:", tokenStore);
+          // console.log("Current tokenStore contents after timeout:", tokenStore);
           const key = String(user.key);
-          console.log(key);
-
-          // const token = tokenStore[key];
-          // console.log(token);
+          // console.log(key);
 
           if (key) {
             
             await client.messages.create({
-              body: "Welcome aboard, you have successfully joined Benkiko. How would you want to proceed? 1. Initiate a transaction, 2. View transaction history, 3. Swap Currencies",
-              from: "whatsapp:+14155238886", // Twilio Sandbox number
+              body: "Welcome aboard, you have successfully joined Benkiko. To proceed reply with Log in",
+              from: "whatsapp:+14155238886", 
               to: fromNumber,
             });
+            user.step = 0
           } else {
             await client.messages.create({
               body: "Sorry, an error was encountered in registering you.",
-              from: "whatsapp:+14155238886", // Twilio Sandbox number
+              from: "whatsapp:+14155238886", 
               to: fromNumber,
             });
             user.step = 0;
@@ -230,7 +225,7 @@ router.post("/", async (req, res) => {
           console.error("Error during validateLogin:", error);
           await client.messages.create({
             body: "Account creation isn't successful.",
-            from: "whatsapp:+14155238886", // Twilio Sandbox number
+            from: "whatsapp:+14155238886", 
             to: fromNumber,
           });
           user.step = 0;
@@ -241,7 +236,12 @@ router.post("/", async (req, res) => {
       user.step = 0;
     }
   } else if (user.step === 4) {
-    // Handle other steps and user actions here
+    if(incomingMessage === "1" || incomingMessage === "initiate a transaction"){
+      twiml.message("You are initiating a transaction, provide the recipients username")
+      rec.name = incomingMessage
+      
+    }
+    
   }
 
   res.writeHead(200, { "Content-Type": "text/xml" });

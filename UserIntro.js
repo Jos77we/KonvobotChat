@@ -4,7 +4,7 @@ const twilio = require("twilio");
 const { MessagingResponse } = require("twilio").twiml;
 const { chainRequest } = require("./CreateAcc.js");
 const axios = require("axios");
-
+const { initPayment } = require("./Payment.js");
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 
@@ -32,12 +32,11 @@ function initMessage() {
     });
 }
 
-
 let userState = {};
-//Store the token in-store storage
-const tokenStore = {};
-// Track login status by user number
 const loginStatus = {}; 
+let recipientName = null;
+let assetTransct = null;
+let amountTransct = null;
 
 const successRes = async (form) => {
   try {
@@ -46,7 +45,6 @@ const successRes = async (form) => {
       form
     );
     if (response.data && response.data.token) {
-      // console.log("Received token:", response.data.token);
       return response.data.token;
     } else {
       console.log({ code: "2001", Message: "Error registering user" });
@@ -69,7 +67,7 @@ async function loginSuccess(paymail, password) {
     console.log(response.data);
 
     if (response.data) {
-      return { status: 200, data: response.data }; 
+      return { status: 200, token: response.data.token, secretKey: response.data.secretKey, username: response.data.username }; 
     } else {
       return { status: 404, data: { code: "404", Message: "Not Found" } }; 
     }
@@ -81,7 +79,6 @@ async function loginSuccess(paymail, password) {
 
 router.post("/create", async (req, res) => {
   const { form } = req.body;
-  // console.log("Received form:", form);
 
   if (!form) {
     console.log("An error occurred as no data is passed");
@@ -91,9 +88,7 @@ router.post("/create", async (req, res) => {
       const token = await successRes(form);
       if (token) {
         const key = Date.now();
-        tokenStore[key] = token;
-
-        // console.log(`Stored token: ${token} with key: ${key}`);
+        userState[key] = { token };
 
         res.status(200).send({ key });
       } else {
@@ -109,19 +104,15 @@ router.post("/create", async (req, res) => {
 router.post('/login-user', async (req, res) => {
   const { paymail, password } = req.body;
 
-  // console.log({ paymail, password });
-
   if (!paymail || !password) {
     return res.status(400).json({ code: "2000", Message: "Error in obtaining details" });
   }
 
   const result = await loginSuccess(paymail, password);
-  loginStatus[req.body.From] = result; 
+  loginStatus[req.body.From] = result;
+  // console.log("THis is the result",result)
 
-  // console.log('loginSuccess result:', result);
-  // console.log('current status', result.status);
-
-  return res.status(result.status).json(result.data);
+  return res.status(result.status).json(result);
 });
 
 router.post("/", async (req, res) => {
@@ -142,21 +133,18 @@ router.post("/", async (req, res) => {
     } else if (incomingMessage === "log in") {
       twiml.message(`Please provide your paymail and password through the link ${userLink}`);
 
-      
-      const checkStatusInterval = setInterval( async () => {
+      const checkStatusInterval = setInterval(async () => {
+      //  console.log(`Checking loginStatus for ${fromNumber}:`, loginStatus);
 
-        // console.log(`Checking loginStatus for ${fromNumber}:`, loginStatus);
-        
-        const status = loginStatus["undefined"]?.status
-        // console.log("The obtained status", status)
-
-        const userName = loginStatus["undefined"]?.data.username
-        // console.log("The user is called:", userName)
+       const status = loginStatus["undefined"]?.status
+        // console.log("The correct status is:", status)
+        const userName = loginStatus["undefined"]?.username
+        // console.log("The guys name is:", userName)
 
         if (status === 200) {
           clearInterval(checkStatusInterval);
           await client.messages.create({
-            body: `Hello ${userName}, Welcome back`,
+            body: `Hello ${userName}, Welcome back. To proceed, please choose:\n1. Initiate a transaction\n2. Deposit\n3. Withdraw`,
             from: "whatsapp:+14155238886", 
             to: fromNumber,
           });
@@ -190,28 +178,22 @@ router.post("/", async (req, res) => {
     user.name = incomingMessage;
     twiml.message(`Hello ${user.name}`);
     const response = await chainRequest(user.name);
-    // console.log("chainRequest response:", response);
 
     if (response === 201) {
       user.key = Date.now(); 
       twiml.message(`Click this link to continue: ${sendLink}, You have 5 minutes`);
-      
-      // console.log("Current tokenStore contents before timeout:", tokenStore);
 
-      // Start the 5-minute countdown after token is stored
       setTimeout(async () => {
         try {
-          // console.log("Current tokenStore contents after timeout:", tokenStore);
           const key = String(user.key);
-          // console.log(key);
 
           if (key) {
-            
             await client.messages.create({
-              body: "Welcome aboard, you have successfully joined Benkiko. How would you want to proceed? 1. Initiate a transaction, 2. View transaction history, 3. Swap Currencies",
+              body: "Welcome aboard, you have successfully joined Benkiko. To proceed reply with Log in",
               from: "whatsapp:+14155238886", 
               to: fromNumber,
             });
+            user.step = 0
           } else {
             await client.messages.create({
               body: "Sorry, an error was encountered in registering you.",
@@ -235,13 +217,74 @@ router.post("/", async (req, res) => {
       user.step = 0;
     }
   } else if (user.step === 4) {
-    
-  }
+    if (incomingMessage === "initiate a transaction" || incomingMessage === "1") {
+      twiml.message("Please provide the recipient's username.");
+      user.step = 5;
+    } else {
+      twiml.message('Please choose:\n1. Initiate a transaction\n2. Deposit\n3. Withdraw');
+    }
+  } else if (user.step === 5) {
+    const recipient = incomingMessage;
+    recipientName = recipient
 
+    if (recipientName) {
+      twiml.message("Provide the asset you wish to transact with")
+      user.step = 6;
+    } else {
+      twiml.message("Recipient username is required.");
+      user.step = 4;
+    }
+  } else if(user.step === 6){
+    const asset = incomingMessage;
+    assetTransct = asset;
+
+    if (assetTransct) {
+      twiml.message("Provide the amount you wish to transact")
+      user.step = 7;
+    } else {
+      twiml.message("An amount id required to continue is required.");
+      user.step = 5;
+    }
+
+    
+  } else if (user.step === 7) {
+    const amount = incomingMessage
+    amountTransct = amount
+
+    if (recipientName && assetTransct && amountTransct) {
+      console.log(`The name-----> ${recipientName}, the asset-----> ${assetTransct}, the amount-----> ${amountTransct}`)
+      
+      try {
+        const loginData = loginStatus["undefined"];
+        console.log("This is the login data:",loginData)
+        if (loginData && loginData.token && loginData.secretKey) {
+          const paymentResponse = await initPayment(recipientName, assetTransct, amountTransct, loginData.token, loginData.secretKey);
+
+          if(paymentResponse.code === 201){
+            twiml.message(`Transaction to ${recipientName} was successful.`);
+          } else {
+            twiml.message("Operational error during transaction please repeat the process")
+          }
+          
+        } else {
+          twiml.message("Login data is missing. Please log in again.");
+          user.step = 0;
+        }
+      } catch (error) {
+        console.error("Error during transaction:", error);
+        twiml.message("An error occurred during the transaction. Please try again.");
+        user.step = 4;
+      }
+    } else {
+      twiml.message("Recipient username is required.");
+      user.step = 4;
+    }
+
+  }
   res.writeHead(200, { "Content-Type": "text/xml" });
   res.end(twiml.toString());
 });
 
-initMessage();
+initMessage()
 
 module.exports = router;
