@@ -5,7 +5,7 @@ const { MessagingResponse } = require("twilio").twiml;
 const { chainRequest } = require("./CreateAcc.js");
 const axios = require("axios");
 const { initPayment } = require("./Payment.js");
-const { WithdrawDeposit, withdrawDeposit } = require("./WithdrawDeposit.js");
+const { withdrawDeposit } = require("./WithdrawDeposit.js");
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 
@@ -196,11 +196,12 @@ router.post("/", async (req, res) => {
     user.name = incomingMessage;
     twiml.message(`Hello ${user.name}`);
     const response = await chainRequest(user.name);
+    console.log("The response is ------>", response)
 
     if (response === 201) {
       user.key = Date.now();
       twiml.message(
-        `Click this link to continue: ${sendLink}, You have 5 minutes`
+        `Click this link to continue: ${sendLink}, You have 3 minutes`
       );
 
       setTimeout(async () => {

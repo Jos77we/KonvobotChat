@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 const session = require("express-session");
-const {genToken} = require('./getToken.js')
+const { getToken } = require("./getToken.js");
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -11,7 +11,7 @@ router.use(bodyParser.json());
 let accountData1 = null;
 let mnemo = null;
 let usname = null;
-let secretKey = "e+eiv_e5q@y-bg#b@%^zvc2@j3+&6#_ulj+w&h1y*0_+&m#8nq"
+let secretKey = "e+eiv_e5q@y-bg#b@%^zvc2@j3+&6#_ulj+w&h1y*0_+&m#8nq";
 let dataAvailable = false;
 
 const sessionMiddleware = (req, res, next) => {
@@ -45,8 +45,6 @@ router.use((req, res, next) => {
   next();
 });
 
-
-
 router.post("/data", (req, res) => {
   const { userName } = req.body;
 
@@ -61,10 +59,11 @@ router.post("/data", (req, res) => {
   }
 });
 
-
-async function chainRequest(name) {
+const chainRequest = async (name) => {
   try {
-    const tokenData = await genToken();
+    const tokenData = await getToken();
+
+    console.log("The returned data is as--------->", tokenData.data);
     const { code, data } = tokenData;
 
     if (code === 200) {
@@ -94,7 +93,7 @@ async function chainRequest(name) {
           index: 0,
           language: "ENGLISH",
           memo_type: "id",
-          memo: "00119",
+          memo: "00120",
           home_domain: "benkiko.io",
         };
 
@@ -126,8 +125,8 @@ async function chainRequest(name) {
       }
     }
   } catch (error) {
-    console.log("404 ERROR OCCURING");
+    console.log("404 ERROR OCCURING --------->", error);
   }
-}
+};
 
 module.exports = { chainRequest, router };
