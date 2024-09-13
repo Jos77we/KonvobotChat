@@ -7,6 +7,9 @@ const axios = require("axios");
 const { initPayment } = require("./Payment.js");
 const { withdrawDeposit } = require("./WithdrawDeposit.js");
 const router = express.Router();
+
+
+
 router.use(bodyParser.urlencoded({ extended: false }));
 
 const apiKeySid = "SK95a3c7d21fb47759ebe4571b2fe32208";
@@ -18,10 +21,11 @@ const client = new twilio(apiKeySid, authToken, { accountSid: accountSid });
 const sendLink = "https://konvoui.netlify.app/confirm-user";
 const userLink = "https://konvoui.netlify.app/login";
 
+
 function initMessage() {
   client.messages
     .create({
-      body: 'Welcome to Konvo Pay. Buy, trade and pay in crypto from your WhatsApp. Text "Log in" to get access to your account. If new text "Create Account"',
+      body: 'Welcome to Konvo Pay. Buy, trade and pay in crypto from your WhatsApp. Text "Log in" to get access to your account. If new text "Create Account" \u{1F60A}',
       from: "whatsapp:+14155238886", // Twilio Sandbox number
       to: "whatsapp:+254759900998",
     })
@@ -39,6 +43,7 @@ let recipientName = null;
 let assetTransct = null;
 let amountTransct = null;
 let reqChangeAsset = null;
+let specUrl = null;
 
 const successRes = async (form) => {
   try {
@@ -62,7 +67,7 @@ async function loginSuccess(paymail, password) {
   try {
     const response = await axios.post(
       "https://api.kipaji.app/api/v1/auth/login",
-      { paymail, password },
+      { paymail, password }, 
       {
         headers: {
           "Content-Type": "application/json",
@@ -244,9 +249,16 @@ router.post("/", async (req, res) => {
     ) {
       twiml.message("Please provide the recipient's username.");
       user.step = 5;
-    } else if (incomingMessage === "Deposit" || incomingMessage === "2") {
+    } else if (incomingMessage === "deposit" || incomingMessage === "2") {
+      specUrl = "https://staging.api.benkiko.io/v1/transactions/deposit/interactive";
       twiml.message(
         "Great, lets get on with depositing some assets. What assets do you want to deposit?"
+      );
+      user.step = 8;
+    } else if( incomingMessage === "withdraw" || incomingMessage === "3") {
+      specUrl = "https://staging.api.benkiko.io/v1/transactions/withdraw/interactive"
+      twiml.message(
+        "Wonderful, lets get on with withdrawing some assets. What assets do you want to withdraw"
       );
       user.step = 8;
     } else {
@@ -328,8 +340,8 @@ router.post("/", async (req, res) => {
     if (reqChangeAsset) {
       try {
         const loginData2 = loginStatus["undefined"];
-        const depoUrl =
-          "https://staging.api.benkiko.io/v1/transactions/deposit/interactive";
+        const depoUrl = specUrl;
+        console.log("The require url is ----------->", specUrl)
         if (loginData2 && loginData2.secretKey) {
           const depositHandle = await withdrawDeposit(
             reqChangeAsset,

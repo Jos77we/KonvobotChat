@@ -93,7 +93,7 @@ const chainRequest = async (name) => {
           index: 0,
           language: "ENGLISH",
           memo_type: "id",
-          memo: "00120",
+          memo: "00123",
           home_domain: "benkiko.io",
         };
 

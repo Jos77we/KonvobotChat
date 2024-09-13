@@ -7,12 +7,12 @@ const withdrawDeposit = async (reqChangeAsset, depoUrl, secretKey) => {
   try {
     const obAuth = await getToken();
     reqAuth = obAuth.data.token;
-    // console.log(reqAuth);
+    console.log(reqAuth);
 
     const asset = String(reqChangeAsset).toLocaleUpperCase();
     const aqSecretK = String(secretKey)
 
-    // console.log(`The asset is ${asset} and the secret key is as -------> ${aqSecretK}`)
+    console.log(`The asset is ${asset} and the secret key is as -------> ${aqSecretK}`)
 
     const data = {
       asset_code: asset,
@@ -30,8 +30,9 @@ const withdrawDeposit = async (reqChangeAsset, depoUrl, secretKey) => {
         },
       }
     );
-
+ 
     if (responseChange.data) {
+      console.log(depoUrl)
       const responseDeposit = await axios.get(depoUrl,
         {
           params: {
