@@ -16,41 +16,53 @@ const readFileAsync = (filePath, encoding = "utf8") => {
   });
 };
 
-const writeFileAsync = (filePath, data) => {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(filePath, data, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-};
 
-const transactFunds = async (userName, recipientName, amountTransct) => {
-  const usName = String(userName);
-  const rcName = String(recipientName);
 
-  try {
-    const data = await readFileAsync("./usersDetails.json");
+const transactFunds = async (
+  userPBKey,
+  recipientPhoneNo,
+  amountTransct,
+  assetTransct
+) => {
+
+let newBalance = null;
+
+console.log('The users public key --->', userPBKey, 'the users phone number is ----->', recipientPhoneNo, 'the amount to transact------>', amountTransct, 'the asset is ---->',assetTransct)
+
+  const account = await server.loadAccount(userPBKey);
+  const balances = account.balances.map((balance) => ({
+    asset_code: balance.asset_code || "XLM",
+    balance: balance.balance,
+  }));
+
+  console.log('The users account balances is', balances)
+
+  const assetValue = assetTransct.toUpperCase()
+  const specificAssetCode = assetValue;
+  const specificBalance = balances.find(
+    (balance) => balance.asset_code === specificAssetCode
+  );
+
+  const balanceValue = specificBalance ? specificBalance.balance : null;
+
+  console.log("The value of the balance is --->", balanceValue);
+
+  const givenAmt = parseInt(balanceValue);
+
+  if (givenAmt > amountTransct) {
+    const data = await readFileAsync("./newCreatedUsers.json");
     const users = JSON.parse(data);
 
-    const user = users.find((u) => u.user === usName);
-    const recipient = users.find((u) => u.user === rcName);
+    const user = users.find((u) => u.phoneNo === recipientPhoneNo);
 
     if (!user) {
-      console.error(`User '${usName}' not found in the user details.`);
-      return false; // Return false if user is not found
+      return 2009;
     }
+    const usersKey = user.publicKey;
+    console.log('The obtained and needed public key is ----->', usersKey)
 
-    if (!recipient) {
-      console.error(`Recipient '${rcName}' not found in the user details.`);
-      return false; // Return false if recipient is not found
-    }
-
-    const usersKey = user.secretKey;
-    const recipientKey = recipient.publicKey;
-
-    if (usersKey && recipientKey) {
-      const senderKeypair = StellarSdk.Keypair.fromSecret(usersKey);
+    if (usersKey) {
+      const senderKeypair = StellarSdk.Keypair.fromSecret(userPBKey);
       const senderPublicKey = senderKeypair.publicKey();
 
       try {
@@ -62,7 +74,7 @@ const transactFunds = async (userName, recipientName, amountTransct) => {
         })
           .addOperation(
             StellarSdk.Operation.payment({
-              destination: recipientKey,
+              destination: usersKey,
               asset: StellarSdk.Asset.native(), // Native asset is XLM
               amount: amountTransct, // Amount in lumens
             })
@@ -74,27 +86,29 @@ const transactFunds = async (userName, recipientName, amountTransct) => {
 
         const transactionResult = await server.submitTransaction(transaction);
 
-        const filePath = path.join(__dirname, "transactionsDetails.json");
+        if(transactionResult.successful){
+          const account = await server.loadAccount(userPBKey);
+          const balances = account.balances.map((balance) => ({
+            asset_code: balance.asset_code || "XLM",
+            balance: balance.balance,
+          }));
+        
+          console.log('The updated balance is as', balances)
+          const assetValue2 = assetTransct.toUpperCase()
+          const specificAssetCode2 = assetValue2;
+          const specificBalance2 = balances.find(
+            (balance) => balance.asset_code === specificAssetCode2
+          );
+        
+          const balanceValue2 = specificBalance2 ? specificBalance2.balance : null;
+          
+          newBalance = balanceValue2
 
-        const dataTrans = {
-          SendersName: userName,
-          RecepientsName: recipientName,
-          data: transactionResult,
-        };
-
-        let fileData;
-        try {
-          fileData = await readFileAsync(filePath);
-        } catch (err) {
-          fileData = "[]"; // File doesn't exist, initialize empty array
         }
-
-        const jsonData = JSON.parse(fileData);
-        jsonData.push(dataTrans);
-
-        await writeFileAsync(filePath, JSON.stringify(jsonData, null, 2));
-
-        return transactionResult.successful; // Return transaction result
+        return {
+          successful: transaction.successful,
+          newBalance: newBalance,
+        };
       } catch (e) {
         console.error("Transaction failed:", e);
         return false;
@@ -103,9 +117,9 @@ const transactFunds = async (userName, recipientName, amountTransct) => {
       console.error("User or recipient keys not found.");
       return false;
     }
-  } catch (err) {
-    console.error("Error reading or processing file:", err);
-    return false;
+  } else{
+    console.error("Balance is less than the transacting amount.");
+      return 2111;
   }
 };
 

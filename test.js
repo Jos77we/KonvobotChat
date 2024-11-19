@@ -1,18 +1,25 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const stellar = require('./stellarAccount.js')
+const newAccount = require('./CreateAccount.js')
+const userLogin = require('./LoginUsers.js')
 const test2 = require('./test2.js')
 const cors = require('cors');
 
 
 const app = express();
+
+app.use(cors({
+  origin: '*',      
+}));
 app.use(bodyParser.json());
 
-app.use(cors());
 
+
+app.use('/user', newAccount.router)
+app.use('/login', userLogin.router)
 app.use('/', stellar);
 app.use('/whatsapp', test2)
-
 
 
 const PORT = 3000;
