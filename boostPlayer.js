@@ -26,18 +26,18 @@ const writeFileAsync = (filePath, data) => {
   });
 };
 
-const transactTokenFunds = async (
+const boostPlayer = async (
   userPBKey,
   mpesaNo,
   teamName,
-  tokenAsset,
-  tokenAmount
+  playerAmount
 ) => {
 
-  console.log('The user public key --->', userPBKey, '\n The phone number ---->', mpesaNo, '\n The team name --->', teamName, '\n The token asset ---->', tokenAsset, 'The amount --->', tokenAmount)
+  console.log('The user public key --->', userPBKey, '\n The phone number ---->', mpesaNo, '\n The team name --->', teamName, 'The amount --->', playerAmount)
 
-  if (tokenAmount) {
+  if (playerAmount) {
 
+    const tokenAsset = 'xlm'
     const mpesaPhoneNo = mpesaNo.replace(/^0/, '254');
 
     console.log('The full mpesa number is as --->', mpesaPhoneNo)
@@ -89,10 +89,10 @@ const transactTokenFunds = async (
           let givenTokens = null;
           
 
-          const tallyAmount = String(tokenAmount);
+          const tallyAmount = String(playerAmount);
           const tokenAmt = parseInt(tallyAmount);
 
-          const lumens = 0.0865;
+          const lumens = 0.035;
 
           const awardedTokens = tokenAmt * lumens;
 
@@ -211,4 +211,4 @@ const transactTokenFunds = async (
   }
 };
 
-module.exports = transactTokenFunds;
+module.exports = boostPlayer;

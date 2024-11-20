@@ -12,6 +12,8 @@ const { fetchMatchData } = require("./tickets");
 const { allTeams } = require("./getTeams");
 const getJersey = require("./getJersey");
 const buyClubJersey = require("./buyClubJersey");
+const { getTeamPlayers } = require("./getTeamPlayers");
+const buyTickets = require("./buyTickets");
 const router = express.Router();
 
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -33,7 +35,6 @@ let userState = {};
 let recipientPhoneNo = null;
 let assetTransct = null;
 let amountTransct = null;
-let userName = null;
 let reqChangeAsset = null;
 let newAmountToken = null;
 let tokenAsset = null;
@@ -42,17 +43,62 @@ let merchChoice = null;
 let merchCategory = null;
 let merchSize = null;
 let merchCustomization = null;
-let mpesaNo = null
+let jerseyPrice = null;
+let mpesaNo = null;
 let ticketChoice = null;
 let teamName = null;
 const givenPhoneNo = "254759900998";
 let newPhoneNo = null;
 let userPBKey = null;
 let availableTeams = [];
+let ticketData = [];
+let ticketAmt = null;
+let player = null;
 
 // function initMessage() {
 
 // }
+
+function setInactivityTimer(fromNumber) {
+  const INACTIVITY_DURATION = 15 * 60 * 1000; // 1 hour in milliseconds
+
+  // Clear any existing timer
+  if (userState[fromNumber]?.inactivityTimeoutId) {
+    clearTimeout(userState[fromNumber].inactivityTimeoutId);
+  }
+
+  // Set a new inactivity timer
+  const timeoutId = setTimeout(() => {
+    const user = userState[fromNumber];
+    if (user) {
+      user.step = 0; // Reset to step 0
+      delete user.inactivityTimeoutId; // Remove the timer ID
+
+      // Notify the user
+      client.messages.create({
+        body: "You were inactive for an hour. Please log in again to continue by texting join why-stream then Hello.",
+        from: "whatsapp:+14155238886",
+        to: fromNumber,
+      });
+
+      console.log(
+        `User ${fromNumber} has been reset to step 0 due to inactivity.`
+      );
+    }
+  }, INACTIVITY_DURATION);
+
+  // Update user's state with the new timeout ID
+  userState[fromNumber].inactivityTimeoutId = timeoutId;
+}
+
+// Helper function to handle user activity
+function handleUserActivity(fromNumber) {
+  const user = userState[fromNumber];
+  if (user) {
+    user.lastActivity = Date.now(); // Update last activity time
+    setInactivityTimer(fromNumber); // Reset the inactivity timer
+  }
+}
 
 router.post("/", async (req, res) => {
   const twiml = new MessagingResponse();
@@ -75,10 +121,17 @@ router.post("/", async (req, res) => {
   }
 
   if (!userState[fromNumber]) {
-    userState[fromNumber] = { step: 0 };
+    userState[fromNumber] = {
+      step: 0,
+      lastActivity: Date.now(),
+      inactivityTimeoutId: null,
+    };
   }
 
   const user = userState[fromNumber];
+
+  // Track activity and reset inactivity timer
+  handleUserActivity(fromNumber);
 
   //The first step to log in or create an account
   if (user.step === 0) {
@@ -89,12 +142,6 @@ router.post("/", async (req, res) => {
     user.step = 1;
   } else if (user.step === 1) {
     // Main menu
-    // client.messages.create({
-    //   body: `Welcome to Benkiko Dao. To explore more procced by choosing:\n1. Clubs\n2. Club tokens and balances\n3. About us`,
-    //   from: "whatsapp:+14155238886",
-    //   to: "whatsapp:+254759900998",
-    // });
-    // user.step = 2;
     if (incomingMessage === "create account") {
       twiml.message(
         `To procced with creating your account in a secure way, follow the link ${createAcc}`
@@ -125,7 +172,7 @@ router.post("/", async (req, res) => {
             client.messages.create({
               body: `Your account has been successfully created!\nPhone Number: ${phoneNumber}\nPublic Key: ${publicKey}\n\n Welcome to Benkiko Dao. To explore more procced by choosing:\n1. Clubs\n2. Club tokens and balances\n3. About us`,
               from: "whatsapp:+14155238886", // Your Twilio WhatsApp number
-              to: "whatsapp:+254759900998", // Replace with user's WhatsApp number
+              to: fromNumber, // Replace with user's WhatsApp number
             });
             user.step = 2;
             // Stop checking
@@ -144,6 +191,7 @@ router.post("/", async (req, res) => {
           twiml.message(
             "We couldn't create your account within the expected timeframe. Please try again later."
           );
+          user.step = 0;
           console.log("Stopped checking after 6 minutes.");
         }
       }, intervalDuration);
@@ -177,7 +225,7 @@ router.post("/", async (req, res) => {
             client.messages.create({
               body: `Welcome back! The login was successful!\nPhone Number: ${phoneNumber}\nStellar Public Key: ${publicKey}\n\n Welcome to Benkiko Dao. To explore more procced by choosing:\n1. Clubs\n2. Club tokens and balances\n3. About us`,
               from: "whatsapp:+14155238886",
-              to: "whatsapp:+254759900998",
+              to: fromNumber,
             });
 
             user.step = 2;
@@ -269,11 +317,7 @@ router.post("/", async (req, res) => {
       user.step = 2;
     }
   } else if (user.step === 4) {
-     if (
-      incomingMessage === "buy club fan tokens" ||
-      incomingMessage === "1"
-    ) {
-
+    if (incomingMessage === "buy club fan tokens" || incomingMessage === "1") {
       const checkAccountDetail = await checkAccount(userPBKey);
 
       if (checkAccountDetail) {
@@ -284,7 +328,7 @@ router.post("/", async (req, res) => {
         await client.messages.create({
           body: `Wonderful add more tokens to your club account.Your account has the following tokens:\n${teamTokens}\n\nChoose which team token you wish to buy.`,
           from: "whatsapp:+14155238886",
-          to: "whatsapp:+254759900998",
+          to: fromNumber,
         });
 
         user.step = 11;
@@ -302,8 +346,9 @@ router.post("/", async (req, res) => {
         "type" in jerseyDet &&
         "price" in jerseyDet
       ) {
+        jerseyPrice = jerseyDet.price;
         twiml.message(
-          `Welcome to Club merch, the available merch is of jersey which are;\n Category: ${jerseyDet.type} \n Price: ${jerseyDet.price}\n If you wish to purchase text YES if not text No`
+          `Welcome to Club merch, the available merch is of jersey which are;\n Category: ${jerseyDet.type} \n Price: ${jerseyDet.price}\n Enter your mpesa number to continue with the transaction`
         );
         user.step = 14;
       } else if (jerseyDet === 2301) {
@@ -331,26 +376,40 @@ router.post("/", async (req, res) => {
           "An error ocurred when fetching tickets, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
         );
       } else {
+        ticketData = ticketAvail;
+        const formattedTickets = ticketAvail
+          .map((ticket) => {
+            return `Ticket Number: ${ticket["Ticket Number"]}\nDate: ${
+              ticket.Date
+            }\nTeam: ${ticket.Team}\nTime: ${ticket.Time}\nVenue: ${
+              ticket.Venue
+            }\nVIP Price: ${ticket.Tickets.VIP || "N/A"}, Regular Price: ${
+              ticket.Tickets.Regular || "N/A"
+            }`;
+          })
+          .join("\n\n");
+
         twiml.message(
-          `Which tickets would you want to purchase,Enter the ticket number for the ticket you want to purchase\n \n${ticketAvail}`
+          `Which tickets would you want to purchase? Enter the ticket number for the ticket you want to purchase:\n\n${formattedTickets}`
         );
+        console.log("The updated ticket data is as --->", ticketData);
         user.step = 18;
       }
     } else if (incomingMessage === "boost player" || incomingMessage === "4") {
-      const choseTeam = await allTeams();
+      const choseTeam = await getTeamPlayers(teamName);
 
-      if (!choseTeam) {
-        handleError(
-          "No teams has been found currently. We working to fix that, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
-        );
-      } else {
+      if (choseTeam.length > 0) {
         twiml.message(
-          `This are the teams, choose your players team ${choseTeam}`
+          `This are the team players, ${choseTeam}. Enter the name of the payer you want to sponser`
         );
-        user.step = 19;
+        user.step = 20;
+      } else {
+        handleError(
+          "No players were found currently. We working to fix that, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+        );
       }
     }
-  }  else if (user.step === 11) {
+  } else if (user.step === 11) {
     if (
       incomingMessage === "xlm" ||
       incomingMessage === "srt" ||
@@ -367,16 +426,19 @@ router.post("/", async (req, res) => {
         "You entered the wrong token code, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
       );
     }
-  } else if(user.step === 12){
-    if(incomingMessage.length !== 10){
+  } else if (user.step === 12) {
+    const numberGiven = incomingMessage;
+    console.log("The responded mpesa number ----->", numberGiven);
+    if (numberGiven.length !== 10) {
       handleError(
         "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
       );
     } else {
-      mpesaNo = incomingMessage;
-      user.step === 13
+      mpesaNo = numberGiven;
+      console.log("The passed mpesa number ---->", mpesaNo);
+      twiml.message("Enter the amount in KES you want to purchase as tokens");
+      user.step = 13;
     }
-    
   } else if (user.step === 13) {
     tokenAmount = incomingMessage;
 
@@ -390,111 +452,170 @@ router.post("/", async (req, res) => {
           tokenAmount
         );
 
+        console.log("THe returned value is --->", payForClubTokens);
         if (payForClubTokens === true) {
-          twiml.message(
-            `Your account for club Tokens ${tokenAsset} has been credited with KES ${tokenAmount}.`
-          );
-          sucessHandeling(
-            "To proceed with other options, input \n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player"
-          );
+          client.messages.create({
+            body: `Your account for club Tokens ${tokenAsset} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`,
+            from: "whatsapp:+14155238886", // Your Twilio WhatsApp number
+            to: fromNumber, // Replace with user's WhatsApp number
+          });
+
+          user.step = 4;
         } else {
-          twiml.message(
-            "Operational error during transaction please repeat the process"
-          );
           handleError(
-            "Operational error during transaction please repeat the process \n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player"
+            "Operational error during transaction please repeat the process \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
           );
         }
       } else {
-       
         handleError(
-          "No token or amount provided, please try again \n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player"
+          "No token or amount provided, please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
         );
       }
     } catch (error) {
       console.error("Error during transaction:", error);
       handleError(
-        "An error occurred during the transaction. Please try again. \n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player"
+        "An error occurred during the transaction. Please try again. \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
       );
     }
   } else if (user.step === 14) {
+    const numberGiven = incomingMessage;
+    console.log("The responded mpesa number ----->", numberGiven);
+    if (numberGiven.length !== 10) {
+      handleError(
+        "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+      );
+    } else {
+      mpesaNo = numberGiven;
+      console.log("The passed mpesa number ---->", mpesaNo);
+      twiml.message(
+        "If you wish to continue with your purchase text YES and a mpesa prompt \nif not text No"
+      );
+      user.step = 15;
+    }
+  } else if (user.step === 15) {
     merchChoice = incomingMessage;
 
     if (merchChoice === "yes") {
-      twiml.message(
-        "A prompt has been sent your way. INput your details to finish the transaction"
+      const purchaseJersey = await buyClubJersey(
+        teamName,
+        mpesaNo,
+        jerseyPrice,
+        userPBKey
       );
-      const purchaseJersey = await buyClubJersey(teamName, newPhoneNo);
 
-      if (purchaseJersey === 3003) {
-        twiml.message("Your purchase has been successfully received.");
+      if (purchaseJersey && purchaseJersey.amount) {
         sucessHandeling(
-          "To proceed with other options, input \n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player"
+          `Your purchase has been successfully received and ${purchaseJersey.amount} XLM accredited to your account.\n\n To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`
         );
       } else if (purchaseJersey === 3004) {
-        twiml.message("An unsuccessful transaction due to mpesa failure");
-        user.step = 1;
-      } else if (purchaseJersey === 3005) {
-        twiml.message(
-          "An error occurred when parsing data. We are working to fix this error"
+        handleError(
+          "An unsuccessful transaction due to mpesa failure.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
         );
-        user.step = 1;
+      } else if (purchaseJersey === 3005) {
+        handleError(
+          "An error occurred when parsing data. We are working to fix this error.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+        );
       } else {
-        twiml.message("An error occured please start again");
-        user.step = 1;
+        handleError(
+          "An error occured please start again.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+        );
       }
-
-      user.step = 1;
     } else if (merchChoice === "no") {
-      twiml.message("Thank you for your response. Come back anytime");
-      user.step = 4;
+      sucessHandeling(
+        "Thank you for your response. \n\nWould you like to try other club options\n \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+      );
     } else {
-      twiml.message("You entered the wrong choice. Please try again");
+      twiml.message(
+        "You entered the wrong choice. \n\nPlease try again\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+      );
       user.step = 4;
     }
 
     user.step = 4;
-  } else if (user.step === 15) {
-    merchCategory = incomingMessage;
-
-    twiml.message(
-      "We are so lucky for you supporting us. What size fit are you, is it small, medium or large "
-    );
-
-    user.step = 15;
-  } else if (user.step === 16) {
-    merchSize = incomingMessage;
-    twiml.message(
-      "Amazing! What wordings would you want to have on your merch"
-    );
-    user.step = 16;
-  } else if (user.step === 17) {
-    merchCustomization = incomingMessage;
-    twiml.message(
-      "Thank you for purchasing your teams merch. Delivery is on process, Enjoy"
-    );
   } else if (user.step === 18) {
-    ticketChoice = incomingMessage;
+    ticketChoice = incomingMessage.trim(); // Remove any whitespace or newlines from input.
 
-    const payTicket = await buyClubJersey(teamName, givenPhoneNo);
+    if (ticketChoice) {
+      console.log("The choice is ----->", ticketChoice);
 
-    if (payTicket === 3003) {
-      twiml.message("Your purchase has been successfully received.");
-      user.step = 1;
-    } else if (payTicket === 3004) {
-      twiml.message("An unsuccessful transaction due to mpesa failure");
-      user.step = 1;
-    } else if (payTicket === 3005) {
-      twiml.message(
-        "An error occurred when parsing data. We are working to fix this error"
-      );
-      user.step = 1;
+      twiml.message("Enter your mpesa number to procced");
+      user.step = 19;
     } else {
-      twiml.message("An error occured please start again");
-      user.step = 1;
+      handleError(
+        "No ticket number was passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+      );
     }
-    user.step = 1;
+  } else if (user.step === 19) {
+    mpesaNo = incomingMessage;
+
+    console.log(
+      "The ticket data that is updated is as ----->",
+      JSON.stringify(ticketData, null, 2)
+    );
+
+    if (ticketChoice && mpesaNo) {
+      const ticketNumber = parseInt(ticketChoice, 10); // Convert user input to a number
+      if (isNaN(ticketNumber)) {
+        handleError("Invalid ticket number. Please enter a valid number.");
+        return;
+      }
+
+      // Find the ticket with the matching 'Ticket Number'
+      const ticket = ticketData.find(
+        (t) => t["Ticket Number"] === ticketNumber
+      );
+
+      if (ticket) {
+        console.log("Found ticket:", ticket);
+        console.log("The date:", ticket.Date, "The venue:", ticket.Venue);
+
+        const ticketAmt = "500"; // Adjust amount as needed
+        const obtTicket = await buyTickets(
+          teamName,
+          mpesaNo,
+          ticketAmt,
+          userPBKey
+        );
+
+        if (obtTicket && obtTicket.amount) {
+          sucessHandeling(
+            `You have successfully purchased a ticket for:\nDate: ${ticket.Date}\nTeam: ${ticket.Team}\nVenue: ${ticket.Venue}\n\n${obtTicket.amount} XLM accredited to your account.\n\nTo proceed with other options, input:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player`
+          );
+        } else if (obtTicket === 3004) {
+          handleError(
+            "Unsuccessful transaction due to Mpesa failure.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+          );
+        } else if (obtTicket === 3005) {
+          handleError(
+            "An error occurred when parsing data. We are working to fix this error.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+          );
+        } else {
+          handleError(
+            "An error occurred. Please start again.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+          );
+        }
+      } else {
+        handleError(
+          "Ticket number not found.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+        );
+      }
+    } else {
+      handleError(
+        "Ticket number was not passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+      );
+    }
+  } else if (user.step === 20) {
+    player = incomingMessage;
+    if (player !== null) {
+      twiml.message("Enter the amount you wish to sponser them with");
+      user.step = 21;
+    } else {
+      handleError(
+        "The player doesnt exist or you entered the wrong name.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+      );
+    }
   }
+
   res.writeHead(200, { "Content-Type": "text/xml" });
   res.end(twiml.toString());
 });

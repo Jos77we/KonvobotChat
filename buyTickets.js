@@ -27,7 +27,7 @@ const writeFileAsync = (filePath, data) => {
   });
 };
 
-const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
+const buyTickets = async (teamName,  mpesaNo, ticketAmt, userPBKey) => {
 
     try {
 
@@ -76,7 +76,7 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
                 let givenTokens = null;
                 let memoText = null;
 
-                const jerseyAmount = String(jerseyPrice);
+                const jerseyAmount = String(ticketAmt);
                 const jerseyAmt = parseInt(jerseyAmount);
             
                 const lumens = 0.00625;
@@ -207,4 +207,4 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
     }
 }
 
-module.exports = buyClubJersey
+module.exports = buyTickets

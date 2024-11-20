@@ -215,8 +215,6 @@ router.post("/account-balance", async (req, res) => {
       balance: balance.balance,
     }));
 
-    
-
     res.json(balances);
   } catch (error) {
     res.status(500).json({ error: "Unable to fetch balances" });
@@ -874,6 +872,32 @@ router.post("/award-tokens", async (req, res) => {
     }
   } catch (e) {
     console.error("Transaction failed:", e);
+  }
+});
+
+router.post("/players", async (req, res) => {
+  try {
+    const { chosenTeam } = req.body;
+
+    const teamName = chosenTeam;
+
+    const url = `https://auth-backend-1-cluk.onrender.com/api/players/team/${teamName}`;
+
+    const allPlayers = await axios.get(url, {headers: {
+      "x-api-key":
+        "GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5",
+      "Content-Type": "application/json",
+    },});
+
+    const obtPlayers = allPlayers.data
+    if (obtPlayers.length > 0) {
+      res.json(allPlayers.data);
+    } else {
+      res.json({message: 'NO players obtained'})
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: "Unable to fetch data" });
   }
 });
 
