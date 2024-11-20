@@ -15,39 +15,28 @@ const buyClubJersey = require("./buyClubJersey");
 const { getTeamPlayers } = require("./getTeamPlayers");
 const buyTickets = require("./buyTickets");
 const router = express.Router();
+require('dotenv').config();
 
 router.use(bodyParser.urlencoded({ extended: false }));
 
-// const apiKeySid = "SK95a3c7d21fb47759ebe4571b2fe32208";
-// const accountSid = "ACb4cf2d815575aca31959f1a58020a221";
-// const authToken = "a3bea88ce8ea5e2a81e81209f2368f56";
 
-const accountSid = "AC9f97bf6338fd0b5613d4a36ef7893346"; // Add your Account SID here
-const authToken = "a9068e6ffc97e50f3ddbefe5b487bd8b"; // Add your Auth Token here
+const accountSid = process.env.ACC_SID
+const authToken = process.env.AUTH_TOKEN
 const client = require("twilio")(accountSid, authToken);
 // const client = new twilio(apiKeySid, authToken);
 
-const userLink = "https://konvobot-z41p.onrender.com/login";
-const createAcc = "https://konvobot-z41p.onrender.com/create-user";
+const userLink = process.env.USER_LINK
+const createAcc = process.env.CREATE_ACC
 
 let userState = {};
 
-let recipientPhoneNo = null;
-let assetTransct = null;
-let amountTransct = null;
-let reqChangeAsset = null;
-let newAmountToken = null;
 let tokenAsset = null;
 let tokenAmount = null;
 let merchChoice = null;
-let merchCategory = null;
-let merchSize = null;
-let merchCustomization = null;
 let jerseyPrice = null;
 let mpesaNo = null;
 let ticketChoice = null;
 let teamName = null;
-const givenPhoneNo = "254759900998";
 let newPhoneNo = null;
 let userPBKey = null;
 let availableTeams = [];
@@ -55,12 +44,9 @@ let ticketData = [];
 let ticketAmt = null;
 let player = null;
 
-// function initMessage() {
-
-// }
 
 function setInactivityTimer(fromNumber) {
-  const INACTIVITY_DURATION = 15 * 60 * 1000; // 1 hour in milliseconds
+  const INACTIVITY_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
   // Clear any existing timer
   if (userState[fromNumber]?.inactivityTimeoutId) {
@@ -81,9 +67,9 @@ function setInactivityTimer(fromNumber) {
         to: fromNumber,
       });
 
-      console.log(
-        `User ${fromNumber} has been reset to step 0 due to inactivity.`
-      );
+      // console.log(
+      //   `User ${fromNumber} has been reset to step 0 due to inactivity.`
+      // );
     }
   }, INACTIVITY_DURATION);
 
@@ -161,7 +147,7 @@ router.post("/", async (req, res) => {
 
           if (userDetails) {
             // If details are found, stop the interval and proceed
-            console.log("User details found:", userDetails);
+            // console.log("User details found:", userDetails);
 
             const { phoneNumber, publicKey } = userDetails;
 
@@ -188,10 +174,12 @@ router.post("/", async (req, res) => {
         // Stop checking after maximum attempts
         if (checkAttempts >= maxAttempts) {
           clearInterval(intervalId);
-          twiml.message(
-            "We couldn't create your account within the expected timeframe. Please try again later."
-          );
-          user.step = 0;
+          client.messages.create({
+            body: "We couldn't verify you created your account within the expected timeframe. Please try again later by typing Create account",
+            from: "whatsapp:+14155238886",
+            to: fromNumber,
+          });
+          user.step = 1
           console.log("Stopped checking after 6 minutes.");
         }
       }, intervalDuration);
@@ -212,14 +200,14 @@ router.post("/", async (req, res) => {
           const userDetails = getUserLogins();
 
           if (userDetails) {
-            console.log("User login details found:", userDetails);
+            // console.log("User login details found:", userDetails);
 
             const { phoneNumber, publicKey } = userDetails;
 
             newPhoneNo = userDetails.phoneNumber;
             userPBKey = userDetails.publicKey;
 
-            console.log("The new public key is ---->", userPBKey);
+            // console.log("The new public key is ---->", userPBKey);
 
             // Notify the user of successful login
             client.messages.create({
@@ -240,9 +228,12 @@ router.post("/", async (req, res) => {
         // Stop checking after maximum attempts
         if (checkAttempts >= maxAttempts) {
           clearInterval(intervalId);
-          twiml.message(
-            "We couldn't verify your login details within the expected timeframe. Please try again later."
-          );
+          client.messages.create({
+            body: "We couldn't verify your login details within the expected timeframe. Please try again later by typing Log in",
+            from: "whatsapp:+14155238886",
+            to: fromNumber,
+          });
+          user.step = 1
           console.log("Stopped checking after 6 minutes.");
         }
       }, intervalDuration);
@@ -257,7 +248,7 @@ router.post("/", async (req, res) => {
 
       if (getAllTeams && getAllTeams.length > 0) {
         availableTeams = getAllTeams;
-        console.log("The obtained teams are ---->", availableTeams);
+        // console.log("The obtained teams are ---->", availableTeams);
         twiml.message(
           `The teams available are as the following. Choose your team. \n\n${getAllTeams}`
         );
@@ -282,14 +273,14 @@ router.post("/", async (req, res) => {
           .join("\n");
 
         twiml.message(
-          `Your account for phone number ${givenPhoneNo} has the following balances:\n${balanceString}`
+          `Your account for phone number ${newPhoneNo} has the following balances:\n${balanceString}`
         );
         startHandleError(
           "To continue with more club options choose from the following options,\n1. Clubs\n2. Club tokens and balances\n3. About us"
         );
       } else {
         startHandleError(
-          `No accounts for the number ${givenPhoneNo} were found, to proceed choose the options,\n1. Clubs\n2. Club tokens and balances\n3. About us`
+          `No account balances for the number ${newPhoneNo} were found, to proceed choose the options,\n1. Clubs\n2. Club tokens and balances\n3. About us`
         );
       }
     } else {
@@ -299,10 +290,10 @@ router.post("/", async (req, res) => {
     }
   } else if (user.step === 3) {
     teamName = incomingMessage.trim();
-    console.log("List of teaams is ------->", availableTeams);
+    // console.log("List of teaams is ------->", availableTeams);
 
     const teamLists = availableTeams.toLowerCase();
-    console.log("New teams are as ------->", teamLists);
+    // console.log("New teams are as ------->", teamLists);
 
     if (teamLists.includes(teamName)) {
       // If valid team, proceed to next step
@@ -392,11 +383,13 @@ router.post("/", async (req, res) => {
         twiml.message(
           `Which tickets would you want to purchase? Enter the ticket number for the ticket you want to purchase:\n\n${formattedTickets}`
         );
-        console.log("The updated ticket data is as --->", ticketData);
+        // console.log("The updated ticket data is as --->", ticketData);
         user.step = 18;
       }
     } else if (incomingMessage === "boost player" || incomingMessage === "4") {
-      const choseTeam = await getTeamPlayers(teamName);
+
+      const givenTeamName = teamName
+      const choseTeam = await getTeamPlayers(givenTeamName);
 
       if (choseTeam.length > 0) {
         twiml.message(
@@ -405,7 +398,7 @@ router.post("/", async (req, res) => {
         user.step = 20;
       } else {
         handleError(
-          "No players were found currently. We working to fix that, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+          "No players were found currently. We working to fix that, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
         );
       }
     }
@@ -428,14 +421,14 @@ router.post("/", async (req, res) => {
     }
   } else if (user.step === 12) {
     const numberGiven = incomingMessage;
-    console.log("The responded mpesa number ----->", numberGiven);
+    // console.log("The responded mpesa number ----->", numberGiven);
     if (numberGiven.length !== 10) {
       handleError(
         "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
       );
     } else {
       mpesaNo = numberGiven;
-      console.log("The passed mpesa number ---->", mpesaNo);
+      // console.log("The passed mpesa number ---->", mpesaNo);
       twiml.message("Enter the amount in KES you want to purchase as tokens");
       user.step = 13;
     }
@@ -452,10 +445,11 @@ router.post("/", async (req, res) => {
           tokenAmount
         );
 
-        console.log("THe returned value is --->", payForClubTokens);
-        if (payForClubTokens === true) {
+        // console.log("THe returned value is --->", payForClubTokens);
+        if (payForClubTokens && payForClubTokens.amount) {
+          const assetTokenObt = tokenAsset.toUpperCase()
           client.messages.create({
-            body: `Your account for club Tokens ${tokenAsset} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`,
+            body: `Your account for club Tokens ${payForClubTokens.amount} ${assetTokenObt} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`,
             from: "whatsapp:+14155238886", // Your Twilio WhatsApp number
             to: fromNumber, // Replace with user's WhatsApp number
           });
@@ -472,23 +466,23 @@ router.post("/", async (req, res) => {
         );
       }
     } catch (error) {
-      console.error("Error during transaction:", error);
+      // console.error("Error during transaction:", error);
       handleError(
         "An error occurred during the transaction. Please try again. \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
       );
     }
   } else if (user.step === 14) {
     const numberGiven = incomingMessage;
-    console.log("The responded mpesa number ----->", numberGiven);
+    // console.log("The responded mpesa number ----->", numberGiven);
     if (numberGiven.length !== 10) {
       handleError(
         "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
       );
     } else {
       mpesaNo = numberGiven;
-      console.log("The passed mpesa number ---->", mpesaNo);
+      // console.log("The passed mpesa number ---->", mpesaNo);
       twiml.message(
-        "If you wish to continue with your purchase text YES and a mpesa prompt \nif not text No"
+        "If you wish to continue with your purchase text YES and wait for the mpesa prompt \nif not text No"
       );
       user.step = 15;
     }
@@ -536,7 +530,7 @@ router.post("/", async (req, res) => {
     ticketChoice = incomingMessage.trim(); // Remove any whitespace or newlines from input.
 
     if (ticketChoice) {
-      console.log("The choice is ----->", ticketChoice);
+      // console.log("The choice is ----->", ticketChoice);
 
       twiml.message("Enter your mpesa number to procced");
       user.step = 19;
@@ -548,10 +542,10 @@ router.post("/", async (req, res) => {
   } else if (user.step === 19) {
     mpesaNo = incomingMessage;
 
-    console.log(
-      "The ticket data that is updated is as ----->",
-      JSON.stringify(ticketData, null, 2)
-    );
+    // console.log(
+    //   "The ticket data that is updated is as ----->",
+    //   JSON.stringify(ticketData, null, 2)
+    // );
 
     if (ticketChoice && mpesaNo) {
       const ticketNumber = parseInt(ticketChoice, 10); // Convert user input to a number
@@ -566,8 +560,8 @@ router.post("/", async (req, res) => {
       );
 
       if (ticket) {
-        console.log("Found ticket:", ticket);
-        console.log("The date:", ticket.Date, "The venue:", ticket.Venue);
+        // console.log("Found ticket:", ticket);
+        // console.log("The date:", ticket.Date, "The venue:", ticket.Venue);
 
         const ticketAmt = "500"; // Adjust amount as needed
         const obtTicket = await buyTickets(
@@ -620,6 +614,6 @@ router.post("/", async (req, res) => {
   res.end(twiml.toString());
 });
 
-// initMessage();
+
 
 module.exports = router;

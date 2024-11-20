@@ -10,7 +10,7 @@ let storedUser = null;
 router.post("/user-login", async (req, res) => {
   const { phoneNumber, publicKey } = req.body;
 
-  console.log('The phone number is ---->', phoneNumber, 'The public key is ----->', publicKey)
+  // console.log('The phone number is ---->', phoneNumber, 'The public key is ----->', publicKey)
 
   if (!phoneNumber || !publicKey) {
     return res
@@ -29,7 +29,7 @@ router.post("/user-login", async (req, res) => {
 const checkLogin = async (phoneNumber, publicKey) => {
   storedUser = { phoneNumber, publicKey };
 
-  console.log("The stored values are ---->", storedUser);
+  // console.log("The stored values are ---->", storedUser);
 
   // Return a success response
   return { message: "Login successful" };

@@ -12,9 +12,9 @@ async function allTeams () {
 
           const teamNames = resp.data.map(team => team.name);
           const formattedTeams = teamNames.join('\n')
-          console.log(resp.data)
-          console.log(teamNames)
-          console.log(formattedTeams)
+          // console.log(resp.data)
+          // console.log(teamNames)
+          // console.log(formattedTeams)
       return formattedTeams
         
     } catch (error) {

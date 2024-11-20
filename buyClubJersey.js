@@ -41,16 +41,16 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
           })
     
           const teamResult = resp.data
-          console.log('The resulting is as:',teamResult)
+          // console.log('The resulting is as:',teamResult)
     
           const teamByName = teamName
-          console.log('The team name is', teamByName)
+          // console.log('The team name is', teamByName)
           const foundTeam = resp.data.find(team => team.name.toLowerCase() === teamByName.toLowerCase());
     
-          console.log('The found team is known as', foundTeam)
+          // console.log('The found team is known as', foundTeam)
           const teamId = foundTeam._id
     
-          console.log('The team id obtained is as', teamId)
+          // console.log('The team id obtained is as', teamId)
     
           if(foundTeam) {
             try {
@@ -60,7 +60,7 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
                 phoneNumber: mpesaPhoneNo
               }
     
-              console.log('The url is as;', url)
+              // console.log('The url is as;', url)
     
               const tres = await axios.post(url, load, {
                 headers: {
@@ -83,14 +83,14 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
             
                 const jerseyTkns = jerseyAmt * lumens;
             
-                console.log("The new calculated amount is ----->", jerseyTkns);
+                // console.log("The new calculated amount is ----->", jerseyTkns);
             
                 const roundJerseyAmount = Math.abs(jerseyTkns).toFixed(4);
-                console.log("The rounded amount is ---->", roundJerseyAmount);
+                // console.log("The rounded amount is ---->", roundJerseyAmount);
             
                 const roundJerseyTokens = parseFloat(roundJerseyAmount).toString();
             
-                console.log("The string amount is as ------>", roundJerseyTokens);
+                // console.log("The string amount is as ------>", roundJerseyTokens);
             
                 givenTokens = roundJerseyTokens;
                 memoText = 'Purchase for a jersey'
@@ -112,7 +112,7 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
                   const usersKey = userPBKey;
                   const tokenAccount = bulkPublicKey.secretKey;
       
-                  console.log("The keys are as----->", usersKey, 'The account seret key --->', tokenAccount);
+                  // console.log("The keys are as----->", usersKey, 'The account seret key --->', tokenAccount);
       
                   if (usersKey) {
                     const senderKeypair = StellarSdk.Keypair.fromSecret(tokenAccount);
@@ -172,7 +172,7 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
                         JSON.stringify(jsonData, null, 2)
                       );
       
-                      console.log('The overall answer is ----->',transactionResult.successful)
+                      // console.log('The overall answer is ----->',transactionResult.successful)
 
                       if(transactionResult.successful){
                         return {amount: givenTokens}; // Return transaction result

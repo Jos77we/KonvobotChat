@@ -34,13 +34,13 @@ const transactTokenFunds = async (
   tokenAmount
 ) => {
 
-  console.log('The user public key --->', userPBKey, '\n The phone number ---->', mpesaNo, '\n The team name --->', teamName, '\n The token asset ---->', tokenAsset, 'The amount --->', tokenAmount)
+  // console.log('The user public key --->', userPBKey, '\n The phone number ---->', mpesaNo, '\n The team name --->', teamName, '\n The token asset ---->', tokenAsset, 'The amount --->', tokenAmount)
 
   if (tokenAmount) {
 
     const mpesaPhoneNo = mpesaNo.replace(/^0/, '254');
 
-    console.log('The full mpesa number is as --->', mpesaPhoneNo)
+    // console.log('The full mpesa number is as --->', mpesaPhoneNo)
     const resp = await axios.get(
       "https://auth-backend-1-cluk.onrender.com/api/teams/teams",
       {
@@ -53,18 +53,18 @@ const transactTokenFunds = async (
     );
 
     const teamResult = resp.data;
-    console.log("The resulting is as:", teamResult);
+    // console.log("The resulting is as:", teamResult);
 
     const teamByName = teamName;
-    console.log("The team name is", teamByName);
+    // console.log("The team name is", teamByName);
     const foundTeam = resp.data.find(
       (team) => team.name.toLowerCase() === teamByName.toLowerCase()
     );
 
-    console.log("The found team is known as", foundTeam);
+    // console.log("The found team is known as", foundTeam);
     const teamId = foundTeam._id;
 
-    console.log("The team id obtained is as", teamId);
+    // console.log("The team id obtained is as", teamId);
 
     if (foundTeam) {
       try {
@@ -73,7 +73,7 @@ const transactTokenFunds = async (
           phoneNumber: mpesaPhoneNo,
         };
 
-        console.log("The url is as;", url);
+        // console.log("The url is as;", url);
 
         const tres = await axios.post(url, load, {
           headers: {
@@ -96,20 +96,20 @@ const transactTokenFunds = async (
 
           const awardedTokens = tokenAmt * lumens;
 
-          console.log("The new calculated amount is ----->", awardedTokens);
+          // console.log("The new calculated amount is ----->", awardedTokens);
 
           const roundedAmount = Math.abs(awardedTokens).toFixed(4);
-          console.log("The rounded amount is ---->", roundedAmount);
+          // console.log("The rounded amount is ---->", roundedAmount);
 
           const roundedTokens = parseFloat(roundedAmount).toString();
 
-          console.log("The string amount is as ------>", roundedTokens);
+          // console.log("The string amount is as ------>", roundedTokens);
 
           givenTokens = roundedTokens;
          const memoText = 'Purchasing tokens';
 
           const assetCodes = String(tokenAsset).toUpperCase();
-          console.log("The asset choosen is", assetCodes);
+          // console.log("The asset choosen is", assetCodes);
 
           try {
             const data2 = await readFileAsync("./assetCodes.json");
@@ -126,7 +126,7 @@ const transactTokenFunds = async (
             const usersKey = userPBKey;
             const tokenAccount = bulkPublicKey.secretKey;
 
-            console.log("The keys are as----->", usersKey);
+            // console.log("The keys are as----->", usersKey);
 
             if (usersKey) {
               const senderKeypair = StellarSdk.Keypair.fromSecret(tokenAccount);
@@ -185,8 +185,11 @@ const transactTokenFunds = async (
                   JSON.stringify(jsonData, null, 2)
                 );
 
-                console.log('The overall answer is ----->',transactionResult.successful)
-                return transactionResult.successful; // Return transaction result
+                // console.log('The overall answer is ----->',transactionResult.successful)
+                 // Return transaction result
+                 if(transactionResult.successful){
+                  return {amount: givenTokens}; // Return transaction result
+                }
               } catch (e) {
                 console.error("Transaction failed:", e);
                 return false;

@@ -30,7 +30,7 @@ const jerseyCharacteristics  = async (teamName) => {
               
               const resData = retResp.data
     
-              console.log(resData)
+              // console.log(resData)
               const jerseyFull = resData.find((great) => great.teamName.toLowerCase() === teamId.toLowerCase());
     
               if(jerseyFull){

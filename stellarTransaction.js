@@ -27,7 +27,7 @@ const transactFunds = async (
 
 let newBalance = null;
 
-console.log('The users public key --->', userPBKey, 'the users phone number is ----->', recipientPhoneNo, 'the amount to transact------>', amountTransct, 'the asset is ---->',assetTransct)
+// console.log('The users public key --->', userPBKey, 'the users phone number is ----->', recipientPhoneNo, 'the amount to transact------>', amountTransct, 'the asset is ---->',assetTransct)
 
   const account = await server.loadAccount(userPBKey);
   const balances = account.balances.map((balance) => ({
@@ -35,7 +35,7 @@ console.log('The users public key --->', userPBKey, 'the users phone number is -
     balance: balance.balance,
   }));
 
-  console.log('The users account balances is', balances)
+  // console.log('The users account balances is', balances)
 
   const assetValue = assetTransct.toUpperCase()
   const specificAssetCode = assetValue;
@@ -45,7 +45,7 @@ console.log('The users public key --->', userPBKey, 'the users phone number is -
 
   const balanceValue = specificBalance ? specificBalance.balance : null;
 
-  console.log("The value of the balance is --->", balanceValue);
+  // console.log("The value of the balance is --->", balanceValue);
 
   const givenAmt = parseInt(balanceValue);
 
@@ -59,7 +59,7 @@ console.log('The users public key --->', userPBKey, 'the users phone number is -
       return 2009;
     }
     const usersKey = user.publicKey;
-    console.log('The obtained and needed public key is ----->', usersKey)
+    // console.log('The obtained and needed public key is ----->', usersKey)
 
     if (usersKey) {
       const senderKeypair = StellarSdk.Keypair.fromSecret(userPBKey);
@@ -93,7 +93,7 @@ console.log('The users public key --->', userPBKey, 'the users phone number is -
             balance: balance.balance,
           }));
         
-          console.log('The updated balance is as', balances)
+          // console.log('The updated balance is as', balances)
           const assetValue2 = assetTransct.toUpperCase()
           const specificAssetCode2 = assetValue2;
           const specificBalance2 = balances.find(

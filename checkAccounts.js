@@ -20,7 +20,7 @@ const checkAccount = async (userPBKey) => {
           asset_code: balance.asset_code || 'XLM',
         }));
 
-        console.log('The result is:', resultList);
+        // console.log('The result is:', resultList);
         return resultList;
       } catch (error) {
         console.error("Error retrieving assets:", error);

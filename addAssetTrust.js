@@ -28,7 +28,7 @@ const addAssetTrust = async (reqChangeAsset, userName) => {
         const issuerAsset = user.assetCode;
         const issuersKey = user.publicKey;
 
-        console.log('The issuers asset', issuerAsset, 'and the key is', issuersKey)
+        // console.log('The issuers asset', issuerAsset, 'and the key is', issuersKey)
 
         try {
           fs.readFile("./usersDetails.json", "utf8", async (err, data) => {
@@ -42,13 +42,13 @@ const addAssetTrust = async (reqChangeAsset, userName) => {
 
             const secretKey1 = user2.secretKey
 
-            console.log('the users secret key is', secretKey1)
+            // console.log('the users secret key is', secretKey1)
 
             if (user2) {
               try {
                 const secretKey = user2.secretKey;
 
-                console.log('the users secret key is', secretKey)
+                // console.log('the users secret key is', secretKey)
   
                 const srtAsset = new StellarSdk.Asset(issuerAsset, issuersKey);
   

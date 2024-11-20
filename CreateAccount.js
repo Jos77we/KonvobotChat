@@ -29,14 +29,14 @@ const writeFileAsync = (filePath, data) => {
 const storeUserDetails = (phoneNumber, publicKey) => {
   storedUser = { phoneNumber, publicKey };
 
-  console.log('The stored values are ---->', storedUser)
+  // console.log('The stored values are ---->', storedUser)
 };
 
 const getStoredUserDetails = () => storedUser;
 
 router.post("/create-user", async (req, res) => {
   const { phoneNumber, publicKey } = req.body;
-  console.log("Received phone number:", phoneNumber, "and public key:", publicKey);
+  // console.log("Received phone number:", phoneNumber, "and public key:", publicKey);
 
   try {
     
@@ -87,12 +87,12 @@ const createAccount = async (phoneNumber, publicKey) => {
       balance: balance.balance,
     }));
 
-    console.log("Account created successfully with balances:", balances);
+    // console.log("Account created successfully with balances:", balances);
 
     if(balances.length > 0){
   
     const result = { phoneNumber, publicKey };
-    console.log("Storing and returning the result from createAccount:", result);
+    // console.log("Storing and returning the result from createAccount:", result);
 
     // Store the details for later retrieval
     storeUserDetails(phoneNumber, publicKey);

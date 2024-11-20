@@ -1,9 +1,9 @@
 const axios = require('axios')
 
 
-const getTeamPlayers = async() => {
+const getTeamPlayers = async(givenTeamName) => {
 
-    const teamName = chosenTeam;
+    const teamName = givenTeamName;
 
     const url = `https://auth-backend-1-cluk.onrender.com/api/players/team/${teamName}`;
 
