@@ -317,7 +317,7 @@ router.post("/", async (req, res) => {
           .join("\n"); // Join all asset codes with a newline
 
         await client.messages.create({
-          body: `Wonderful add more tokens to your club account.Your account has the following tokens:\n${teamTokens}\n\nChoose which team token you wish to buy.`,
+          body: `Wonderful add more tokens to your club account.Your account has the following tokens:\n\n${teamTokens}\n\nChoose which team token you wish to buy.`,
           from: "whatsapp:+14155238886",
           to: fromNumber,
         });
@@ -339,7 +339,7 @@ router.post("/", async (req, res) => {
       ) {
         jerseyPrice = jerseyDet.price;
         twiml.message(
-          `Welcome to Club merch, the available merch is of jersey which are;\n Category: ${jerseyDet.type} \n Price: ${jerseyDet.price}\n Enter your mpesa number to continue with the transaction`
+          `Welcome to Club merch, the available merch is of jersey which are;\n Category: ${jerseyDet.type} \n Price: ${jerseyDet.price}\n\nEnter your mpesa number to continue with the transaction`
         );
         user.step = 14;
       } else if (jerseyDet === 2301) {
@@ -416,7 +416,7 @@ router.post("/", async (req, res) => {
       user.step = 12;
     } else {
       handleError(
-        "You entered the wrong token code, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+        "You entered the wrong token code, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
       );
     }
   } else if (user.step === 12) {
@@ -424,7 +424,7 @@ router.post("/", async (req, res) => {
     // console.log("The responded mpesa number ----->", numberGiven);
     if (numberGiven.length !== 10) {
       handleError(
-        "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+        "You entered the wrong phone number format, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
       );
     } else {
       mpesaNo = numberGiven;
