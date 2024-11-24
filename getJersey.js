@@ -2,7 +2,7 @@ const axios = require('axios')
 
 const jerseyCharacteristics  = async (teamName) => {
     try {
-        const jersResp = await axios.get('https://auth-backend-1-cluk.onrender.com/api/teams/teams', {
+        const jersResp = await axios.get('https://auth-backend-py1a.vercel.app/api/teams/teams', {
           headers: {
             'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
             'Content-Type': 'application/json'
@@ -21,7 +21,7 @@ const jerseyCharacteristics  = async (teamName) => {
     
             try {
     
-              const retResp = await axios.get('https://auth-backend-1-cluk.onrender.com/api/jerseys', {
+              const retResp = await axios.get('https://auth-backend-py1a.vercel.app/api/jerseys', {
                 headers: {
                   'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
                   'Content-Type': 'application/json'

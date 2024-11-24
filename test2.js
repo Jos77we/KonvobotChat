@@ -134,16 +134,16 @@ router.post("/", async (req, res) => {
       );
 
       let checkAttempts = 0;
-      const maxAttempts = 3; // 3 attempts (2 minutes per attempt = 6 minutes max)
-      const intervalDuration = 120000; // 2 minutes in milliseconds
+      const maxAttempts = 5; // 5 attempts (1 minute per attempt = 5 minutes max)
+      const intervalDuration = 60000; // 1 minute in milliseconds
 
       // Start checking
-      const intervalId = setInterval(() => {
+      const intervalId = setInterval(async () => {
         checkAttempts++;
 
         try {
           // Retrieve stored user details
-          const userDetails = getStoredUserDetails();
+          const userDetails = await getStoredUserDetails();
 
           if (userDetails) {
             // If details are found, stop the interval and proceed
@@ -188,8 +188,8 @@ router.post("/", async (req, res) => {
         `Please provide your paymail and password through the link ${userLink}`
       );
 
-      const maxAttempts = 3;
-      const intervalDuration = 120000;
+      const maxAttempts = 5;
+      const intervalDuration = 60000;
       let checkAttempts = 0;
 
       let intervalId = setInterval(() => {

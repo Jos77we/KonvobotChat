@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const newAccount = require('./CreateAccount.js')
 const userLogin = require('./LoginUsers.js')
 const test2 = require('./test2.js')
+const stellar = require('./stellarTest.js')
 const cors = require('cors');
 
 
@@ -18,6 +19,7 @@ app.use(bodyParser.json());
 app.use('/user', newAccount.router)
 app.use('/login', userLogin.router)
 app.use('/whatsapp', test2)
+app.use('/', stellar)
 
 
 const PORT = 3000;

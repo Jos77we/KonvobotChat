@@ -37,7 +37,7 @@ let givenTokens = null
     memoText = 'Tokens for purchasing tokens'
 
     const resp = await axios.get(
-      "https://auth-backend-1-cluk.onrender.com/api/teams/teams",
+      "https://auth-backend-py1a.vercel.app/api/teams/teams",
       {
         headers: {
           "x-api-key":
@@ -63,7 +63,7 @@ let givenTokens = null
 
     if (foundTeam) {
       try {
-        const url = `https://auth-backend-1-cluk.onrender.com/api/mpesa/stk/${teamId}`;
+        const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk/${teamId}`;
         const load = {
           phoneNumber: newPhoneNo,
         };

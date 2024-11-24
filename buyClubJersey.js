@@ -33,7 +33,7 @@ const buyClubJersey = async (teamName,  mpesaNo, jerseyPrice, userPBKey) => {
 
       const mpesaPhoneNo = mpesaNo.replace(/^0/, '254');
 
-        const resp =  await axios.get('https://auth-backend-1-cluk.onrender.com/api/teams/teams', {
+        const resp =  await axios.get('https://auth-backend-py1a.vercel.app/api/teams/teams', {
             headers: {
               'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
               'Content-Type': 'application/json'

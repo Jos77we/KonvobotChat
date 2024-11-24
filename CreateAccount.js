@@ -16,6 +16,15 @@ router.use(bodyParser.json());
 
 let storedUser = null;
 
+const readFileAsync = (filePath, encoding = "utf8") => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, encoding, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
+    });
+  });
+};
+
 const writeFileAsync = (filePath, data) => {
   return new Promise((resolve, reject) => {
     fs.writeFile(filePath, data, (err) => {
@@ -26,17 +35,18 @@ const writeFileAsync = (filePath, data) => {
 };
 
 // Function to store user details
-const storeUserDetails = (phoneNumber, publicKey) => {
+const storeUserDetails = async(phoneNumber, publicKey) => {
   storedUser = { phoneNumber, publicKey };
 
-  // console.log('The stored values are ---->', storedUser)
+  console.log('The stored values are ---->', storedUser)
 };
 
-const getStoredUserDetails = () => storedUser;
+const getStoredUserDetails = async () => storedUser;
 
 router.post("/create-user", async (req, res) => {
   const { phoneNumber, publicKey } = req.body;
-  // console.log("Received phone number:", phoneNumber, "and public key:", publicKey);
+  
+  console.log("Received phone number:", phoneNumber, "and public key:", publicKey);
 
   try {
     
@@ -71,14 +81,10 @@ router.post("/create-user", async (req, res) => {
 
 const createAccount = async (phoneNumber, publicKey) => {
   try {
-    const { default: fetch } = await import("node-fetch");
-
+    
     if(!publicKey){
       throw new Error("Public key is required and cannot be undefined.");
     }
-    const friendbotUrl = `https://friendbot.stellar.org/?addr=${publicKey}`;
-    await fetch(friendbotUrl);
-
   
     // Load the account to get balances
     const account = await server.loadAccount(publicKey);
@@ -87,15 +93,16 @@ const createAccount = async (phoneNumber, publicKey) => {
       balance: balance.balance,
     }));
 
-    // console.log("Account created successfully with balances:", balances);
+    console.log("Account created successfully with balances:", balances);
 
-    if(balances.length > 0){
+    if(parseFloat(balances[0].balance) > 0){
   
     const result = { phoneNumber, publicKey };
-    // console.log("Storing and returning the result from createAccount:", result);
+    console.log("Storing and returning the result from createAccount:", result);
 
     // Store the details for later retrieval
     storeUserDetails(phoneNumber, publicKey);
+    return { success: true };
   } else{
     console.error("No balances found. Account funding may have failed.");
       return null;

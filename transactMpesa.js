@@ -5,7 +5,7 @@ async function intiatePayment (teamName){
     
 
   try {
-    const resp =  await axios.get('https://auth-backend-1-cluk.onrender.com/api/teams/teams', {
+    const resp =  await axios.get('https://auth-backend-py1a.vercel.app/api/teams/teams', {
         headers: {
           'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
           'Content-Type': 'application/json'
@@ -27,7 +27,7 @@ async function intiatePayment (teamName){
       if(foundTeam) {
         try {
 
-          const url = `https://auth-backend-1-cluk.onrender.com/api/mpesa/stk/${teamId}`
+          const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk/${teamId}`
           const load = {
             phoneNumber: "254759900998"
           }

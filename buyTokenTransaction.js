@@ -68,7 +68,7 @@ const transactTokenFunds = async (
 
     if (foundTeam) {
       try {
-        const url = `https://auth-backend-1-cluk.onrender.com/api/mpesa/stk/${teamId}`;
+        const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk/${teamId}`;
         const load = {
           phoneNumber: mpesaPhoneNo,
         };

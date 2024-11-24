@@ -5,7 +5,7 @@ const getTeamPlayers = async(givenTeamName) => {
 
     const teamName = givenTeamName;
 
-    const url = `https://auth-backend-1-cluk.onrender.com/api/players/team/${teamName}`;
+    const url = `https://auth-backend-py1a.vercel.app/api/players/team/${teamName}`;
 
     const allPlayers = await axios.get(url, {headers: {
       "x-api-key":

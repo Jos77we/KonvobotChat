@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function fetchMatchData() {
     try {
-        const response = await axios.get('https://auth-backend-1-cluk.onrender.com/api/tickets', {
+        const response = await axios.get('https://auth-backend-py1a.vercel.app/api/tickets', {
             headers: {
                 'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
                 'Content-Type': 'application/json'
