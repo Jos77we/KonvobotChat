@@ -440,7 +440,6 @@ router.post("/", async (req, res) => {
         const payForClubTokens = await buyTokens(
           userPBKey,
           mpesaNo,
-          teamName,
           tokenAsset,
           tokenAmount
         );
@@ -491,7 +490,6 @@ router.post("/", async (req, res) => {
 
     if (merchChoice === "yes") {
       const purchaseJersey = await buyClubJersey(
-        teamName,
         mpesaNo,
         jerseyPrice,
         userPBKey
@@ -565,7 +563,6 @@ router.post("/", async (req, res) => {
 
         const ticketAmt = "500"; // Adjust amount as needed
         const obtTicket = await buyTickets(
-          teamName,
           mpesaNo,
           ticketAmt,
           userPBKey

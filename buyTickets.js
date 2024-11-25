@@ -27,37 +27,20 @@ const writeFileAsync = (filePath, data) => {
   });
 };
 
-const buyTickets = async (teamName,  mpesaNo, ticketAmt, userPBKey) => {
+const buyTickets = async ( mpesaNo, ticketAmt, userPBKey) => {
 
     try {
 
       const mpesaPhoneNo = mpesaNo.replace(/^0/, '254');
+      const amountOwn = parseInt(ticketAmt, 10)
 
-        const resp =  await axios.get('https://auth-backend-py1a.vercel.app/api/teams/teams', {
-            headers: {
-              'x-api-key': 'GCQI626CM2QRQH4MPOSW5D7GDEUGBY54J3XUAMIPNE4VAXIFGFQN34V5',
-              'Content-Type': 'application/json'
-            }
-          })
-    
-          const teamResult = resp.data
-        //   console.log('The resulting is as:',teamResult)
-    
-          const teamByName = teamName
-        //   console.log('The team name is', teamByName)
-          const foundTeam = resp.data.find(team => team.name.toLowerCase() === teamByName.toLowerCase());
-    
-        //   console.log('The found team is known as', foundTeam)
-          const teamId = foundTeam._id
-    
-        //   console.log('The team id obtained is as', teamId)
-    
-          if(foundTeam) {
+          if(mpesaPhoneNo && amountOwn) {
             try {
     
-              const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk/${teamId}`
+              const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk`
               const load = {
-                phoneNumber: mpesaPhoneNo
+                phoneNumber: mpesaPhoneNo,
+                amount: amountOwn
               }
     
             //   console.log('The url is as;', url)
