@@ -42,9 +42,10 @@ const transactTokenFunds = async (
 
     if (mpesaPhoneNo && amountOwn) {
       try {
-        const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk/${teamId}`;
+        const url = `https://auth-backend-py1a.vercel.app/api/mpesa/stk`;
         const load = {
           phoneNumber: mpesaPhoneNo,
+          amount: amountOwn
         };
 
         // console.log("The url is as;", url);
