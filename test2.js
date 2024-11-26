@@ -15,18 +15,17 @@ const buyClubJersey = require("./buyClubJersey");
 const { getTeamPlayers } = require("./getTeamPlayers");
 const buyTickets = require("./buyTickets");
 const router = express.Router();
-require('dotenv').config();
+require("dotenv").config();
 
 router.use(bodyParser.urlencoded({ extended: false }));
 
-
-const accountSid = process.env.ACC_SID
-const authToken = process.env.AUTH_TOKEN
+const accountSid = process.env.ACC_SID;
+const authToken = process.env.AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
 // const client = new twilio(apiKeySid, authToken);
 
-const userLink = process.env.USER_LINK
-const createAcc = process.env.CREATE_ACC
+const userLink = process.env.USER_LINK;
+const createAcc = process.env.CREATE_ACC;
 
 let userState = {};
 
@@ -43,7 +42,6 @@ let availableTeams = [];
 let ticketData = [];
 let ticketAmt = null;
 let player = null;
-
 
 function setInactivityTimer(fromNumber) {
   const INACTIVITY_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -179,7 +177,7 @@ router.post("/", async (req, res) => {
             from: "whatsapp:+14155238886",
             to: fromNumber,
           });
-          user.step = 1
+          user.step = 1;
           console.log("Stopped checking after 6 minutes.");
         }
       }, intervalDuration);
@@ -233,7 +231,7 @@ router.post("/", async (req, res) => {
             from: "whatsapp:+14155238886",
             to: fromNumber,
           });
-          user.step = 1
+          user.step = 1;
           console.log("Stopped checking after 6 minutes.");
         }
       }, intervalDuration);
@@ -250,12 +248,16 @@ router.post("/", async (req, res) => {
         availableTeams = getAllTeams;
 
         const teamsArray = Array.isArray(getAllTeams)
-        ? getAllTeams
-        : getAllTeams.split(', ');
+          ? getAllTeams
+          : getAllTeams.includes(", ")
+          ? getAllTeams.split(", ")
+          : getAllTeams.includes("\n")
+          ? getAllTeams.split("\n")
+          : getAllTeams.split(" ");
 
         const numberedTeams = teamsArray
-        .map((team, index) => `${index + 1}. ${team}`)
-        .join('\n');
+          .map((team, index) => `${index + 1}. ${team}`)
+          .join("\n");
         // console.log("The obtained teams are ---->", availableTeams);
         twiml.message(
           `The teams available are as the following. Choose your team. \n\n${numberedTeams}`
@@ -395,8 +397,7 @@ router.post("/", async (req, res) => {
         user.step = 18;
       }
     } else if (incomingMessage === "boost player" || incomingMessage === "4") {
-
-      const givenTeamName = teamName
+      const givenTeamName = teamName;
       const choseTeam = await getTeamPlayers(givenTeamName);
 
       if (choseTeam.length > 0) {
@@ -409,13 +410,13 @@ router.post("/", async (req, res) => {
           "No players were found currently. We working to fix that, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       }
-    } else if(incomingMessage === 'main menu' || incomingMessage === "5"){
+    } else if (incomingMessage === "main menu" || incomingMessage === "5") {
       client.messages.create({
-        body: 'Welcome back to the Main Menu. which option would you want proceed with:\n1. Clubs\n2. Club tokens and balances\n3. About us',
+        body: "Welcome back to the Main Menu. which option would you want proceed with:\n1. Clubs\n2. Club tokens and balances\n3. About us",
         from: "whatsapp:+14155238886",
         to: fromNumber,
       });
-      user.step = 2
+      user.step = 2;
     }
   } else if (user.step === 11) {
     if (
@@ -461,7 +462,7 @@ router.post("/", async (req, res) => {
 
         // console.log("THe returned value is --->", payForClubTokens);
         if (payForClubTokens && payForClubTokens.amount) {
-          const assetTokenObt = tokenAsset.toUpperCase()
+          const assetTokenObt = tokenAsset.toUpperCase();
           client.messages.create({
             body: `Your account for club Tokens ${payForClubTokens.amount} ${assetTokenObt} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu`,
             from: "whatsapp:+14155238886", // Your Twilio WhatsApp number
@@ -577,11 +578,7 @@ router.post("/", async (req, res) => {
         // console.log("The date:", ticket.Date, "The venue:", ticket.Venue);
 
         const ticketAmt = "500"; // Adjust amount as needed
-        const obtTicket = await buyTickets(
-          mpesaNo,
-          ticketAmt,
-          userPBKey
-        );
+        const obtTicket = await buyTickets(mpesaNo, ticketAmt, userPBKey);
 
         if (obtTicket && obtTicket.amount) {
           sucessHandeling(
@@ -625,7 +622,5 @@ router.post("/", async (req, res) => {
   res.writeHead(200, { "Content-Type": "text/xml" });
   res.end(twiml.toString());
 });
-
-
 
 module.exports = router;
