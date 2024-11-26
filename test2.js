@@ -248,7 +248,12 @@ router.post("/", async (req, res) => {
 
       if (getAllTeams && getAllTeams.length > 0) {
         availableTeams = getAllTeams;
-        const numberedTeams = getAllTeams
+
+        const teamsArray = Array.isArray(getAllTeams)
+        ? getAllTeams
+        : getAllTeams.split(', ');
+
+        const numberedTeams = teamsArray
         .map((team, index) => `${index + 1}. ${team}`)
         .join('\n');
         // console.log("The obtained teams are ---->", availableTeams);
