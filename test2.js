@@ -248,9 +248,12 @@ router.post("/", async (req, res) => {
 
       if (getAllTeams && getAllTeams.length > 0) {
         availableTeams = getAllTeams;
+        const numberedTeams = getAllTeams
+        .map((team, index) => `${index + 1}. ${team}`)
+        .join('\n');
         // console.log("The obtained teams are ---->", availableTeams);
         twiml.message(
-          `The teams available are as the following. Choose your team. \n\n${getAllTeams}`
+          `The teams available are as the following. Choose your team. \n\n${numberedTeams}`
         );
         user.step = 3;
       } else if (getAllTeams === 5001) {
@@ -325,7 +328,7 @@ router.post("/", async (req, res) => {
         user.step = 11;
       } else {
         sucessHandeling(
-          "An error occure please wait as we fix it, try again\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+          "An error occure please wait as we fix it, try again\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
         );
       }
     } else if (incomingMessage === "club merch" || incomingMessage === "2") {
@@ -344,19 +347,19 @@ router.post("/", async (req, res) => {
         user.step = 14;
       } else if (jerseyDet === 2301) {
         handleError(
-          "An error occured when fetching jersey details we are working to resolve it, please try again.\n1.  Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "An error occured when fetching jersey details we are working to resolve it, please try again.\n1.  Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       } else if (jerseyDet === 2302) {
         handleError(
-          "The team provided was not found in our database, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "The team provided was not found in our database, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       } else if (jerseyDet === 2303) {
         handleError(
-          "Invalid team name was used, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "Invalid team name was used, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       } else {
         handleError(
-          "An error is experienced we are working to resolve this, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "An error is experienced we are working to resolve this, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       }
     } else if (incomingMessage === "match tickets" || incomingMessage === "3") {
@@ -364,7 +367,7 @@ router.post("/", async (req, res) => {
 
       if (ticketAvail === 500) {
         handleError(
-          "An error ocurred when fetching tickets, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "An error ocurred when fetching tickets, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       } else {
         ticketData = ticketAvail;
@@ -398,9 +401,16 @@ router.post("/", async (req, res) => {
         user.step = 20;
       } else {
         handleError(
-          "No players were found currently. We working to fix that, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+          "No players were found currently. We working to fix that, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
         );
       }
+    } else if(incomingMessage === 'main menu' || incomingMessage === "5"){
+      client.messages.create({
+        body: 'Welcome back to the Main Menu. which option would you want proceed with:\n1. Clubs\n2. Club tokens and balances\n3. About us',
+        from: "whatsapp:+14155238886",
+        to: fromNumber,
+      });
+      user.step = 2
     }
   } else if (user.step === 11) {
     if (
@@ -416,7 +426,7 @@ router.post("/", async (req, res) => {
       user.step = 12;
     } else {
       handleError(
-        "You entered the wrong token code, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+        "You entered the wrong token code, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
       );
     }
   } else if (user.step === 12) {
@@ -424,7 +434,7 @@ router.post("/", async (req, res) => {
     // console.log("The responded mpesa number ----->", numberGiven);
     if (numberGiven.length !== 10) {
       handleError(
-        "You entered the wrong phone number format, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player "
+        "You entered the wrong phone number format, please try again.\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu "
       );
     } else {
       mpesaNo = numberGiven;
@@ -448,7 +458,7 @@ router.post("/", async (req, res) => {
         if (payForClubTokens && payForClubTokens.amount) {
           const assetTokenObt = tokenAsset.toUpperCase()
           client.messages.create({
-            body: `Your account for club Tokens ${payForClubTokens.amount} ${assetTokenObt} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`,
+            body: `Your account for club Tokens ${payForClubTokens.amount} ${assetTokenObt} has been credited with KES ${tokenAmount}. To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu`,
             from: "whatsapp:+14155238886", // Your Twilio WhatsApp number
             to: fromNumber, // Replace with user's WhatsApp number
           });
@@ -456,18 +466,18 @@ router.post("/", async (req, res) => {
           user.step = 4;
         } else {
           handleError(
-            "Operational error during transaction please repeat the process \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+            "Operational error during transaction please repeat the process \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
           );
         }
       } else {
         handleError(
-          "No token or amount provided, please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+          "No token or amount provided, please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
         );
       }
     } catch (error) {
       // console.error("Error during transaction:", error);
       handleError(
-        "An error occurred during the transaction. Please try again. \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+        "An error occurred during the transaction. Please try again. \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
       );
     }
   } else if (user.step === 14) {
@@ -475,7 +485,7 @@ router.post("/", async (req, res) => {
     // console.log("The responded mpesa number ----->", numberGiven);
     if (numberGiven.length !== 10) {
       handleError(
-        "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player "
+        "You entered the wrong phone number format, please try again.\n1. Get a new Club Token\n2. Buy Club Tokens\n3. Buy Clubs Jerseys\n4. Buy Match Tickets\n5. Boost your Player\n5. Main Menu "
       );
     } else {
       mpesaNo = numberGiven;
@@ -497,28 +507,28 @@ router.post("/", async (req, res) => {
 
       if (purchaseJersey && purchaseJersey.amount) {
         sucessHandeling(
-          `Your purchase has been successfully received and ${purchaseJersey.amount} XLM accredited to your account.\n\n To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player`
+          `Your purchase has been successfully received and ${purchaseJersey.amount} XLM accredited to your account.\n\n To proceed with other options, input \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu`
         );
       } else if (purchaseJersey === 3004) {
         handleError(
-          "An unsuccessful transaction due to mpesa failure.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+          "An unsuccessful transaction due to mpesa failure.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
         );
       } else if (purchaseJersey === 3005) {
         handleError(
-          "An error occurred when parsing data. We are working to fix this error.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+          "An error occurred when parsing data. We are working to fix this error.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
         );
       } else {
         handleError(
-          "An error occured please start again.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+          "An error occured please start again.\n\n Please try again \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
         );
       }
     } else if (merchChoice === "no") {
       sucessHandeling(
-        "Thank you for your response. \n\nWould you like to try other club options\n \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+        "Thank you for your response. \n\nWould you like to try other club options\n \n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
       );
     } else {
       twiml.message(
-        "You entered the wrong choice. \n\nPlease try again\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player"
+        "You entered the wrong choice. \n\nPlease try again\n1. Buy Club Tokens\n2. Buy Clubs Jerseys\n3. Buy Match Tickets\n4. Boost your Player\n5. Main Menu"
       );
       user.step = 4;
     }
@@ -534,7 +544,7 @@ router.post("/", async (req, res) => {
       user.step = 19;
     } else {
       handleError(
-        "No ticket number was passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+        "No ticket number was passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
       );
     }
   } else if (user.step === 19) {
@@ -570,29 +580,29 @@ router.post("/", async (req, res) => {
 
         if (obtTicket && obtTicket.amount) {
           sucessHandeling(
-            `You have successfully purchased a ticket for:\nDate: ${ticket.Date}\nTeam: ${ticket.Team}\nVenue: ${ticket.Venue}\n\n${obtTicket.amount} XLM accredited to your account.\n\nTo proceed with other options, input:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player`
+            `You have successfully purchased a ticket for:\nDate: ${ticket.Date}\nTeam: ${ticket.Team}\nVenue: ${ticket.Venue}\n\n${obtTicket.amount} XLM accredited to your account.\n\nTo proceed with other options, input:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu`
           );
         } else if (obtTicket === 3004) {
           handleError(
-            "Unsuccessful transaction due to Mpesa failure.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+            "Unsuccessful transaction due to Mpesa failure.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
           );
         } else if (obtTicket === 3005) {
           handleError(
-            "An error occurred when parsing data. We are working to fix this error.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+            "An error occurred when parsing data. We are working to fix this error.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
           );
         } else {
           handleError(
-            "An error occurred. Please start again.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+            "An error occurred. Please start again.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
           );
         }
       } else {
         handleError(
-          "Ticket number not found.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+          "Ticket number not found.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
         );
       }
     } else {
       handleError(
-        "Ticket number was not passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+        "Ticket number was not passed.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
       );
     }
   } else if (user.step === 20) {
@@ -602,7 +612,7 @@ router.post("/", async (req, res) => {
       user.step = 21;
     } else {
       handleError(
-        "The player doesnt exist or you entered the wrong name.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player"
+        "The player doesnt exist or you entered the wrong name.\n\nPlease try again:\n1. Buy Club Tokens\n2. Buy Club Jerseys\n3. Buy Match Tickets\n4. Boost Your Player\n5. Main Menu"
       );
     }
   }
